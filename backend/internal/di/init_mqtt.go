@@ -6,6 +6,7 @@ import (
 
 	"github.com/muhammadyunus/Restify-Service/internal/config"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/mqtt"
 )
 
 type mqttStub struct{}
@@ -35,5 +36,9 @@ func initMQTT(cfg config.EMQXConfig) (repository.MQTTBroker, error) {
 		return nil, errors.New("emqx url is required")
 	}
 
-	return &mqttStub{}, nil
+	if cfg.URL == "stub" {
+		return &mqttStub{}, nil
+	}
+
+	return mqtt.NewEMQXBroker(context.Background(), cfg.URL)
 }

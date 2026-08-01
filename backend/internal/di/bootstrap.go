@@ -66,6 +66,8 @@ type Container struct {
 	IntrospectService *service.IntrospectorService
 	QueueService      *service.QueueService
 	WorkerPool        *service.WorkerPool
+	MQTTService       *service.MQTTService
+	EventBus          *service.EventBus
 
 	closer []func(context.Context) error
 }
@@ -167,6 +169,10 @@ func (c *Container) wireServices() error {
 	// Initialize message queue service and worker pool
 	c.QueueService = service.NewQueueService(c.Queue)
 	c.WorkerPool = service.NewWorkerPool(c.Logger)
+
+	// Initialize MQTT service and event bus
+	c.MQTTService = service.NewMQTTService(c.MQTT)
+	c.EventBus = service.NewEventBus(c.MQTT)
 
 	// Initialize auth middleware and rate limiter
 	jwtExpiration, _ := time.ParseDuration(c.Config.JWT.Expiration)
