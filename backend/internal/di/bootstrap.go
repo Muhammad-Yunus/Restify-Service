@@ -41,6 +41,7 @@ type Container struct {
 	IntrospectHandler *handler.IntrospectHandler
 	LiveHandler       *handler.LiveHandler
 	AnalyticsHandler  *handler.AnalyticsHandler
+	AlertHandler      *handler.AlertHandler
 	BaasRouteRegistry *baas.RouteRegistry
 
 	AuthService       domservice.AuthService
@@ -123,7 +124,7 @@ func (c *Container) wireServices() error {
 		return fmt.Errorf("init analytics repo: %w", err)
 	}
 
-	c.AlertRepo, err = initAlertRepo()
+	c.AlertRepo, err = initAlertRepo(c.DB, c.GORM)
 	if err != nil {
 		return fmt.Errorf("init alert repo: %w", err)
 	}
@@ -140,7 +141,7 @@ func (c *Container) wireServices() error {
 	c.RESTGenerator = baas.NewRESTGenerator(c.APIIntrospector, c.Logger)
 	c.EmailService = domservice.NewEmailService(c.Logger)
 	c.AnalyticsService = domservice.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
-	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger)
+	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger, c.MQTT)
 	c.SchedulerService = domservice.NewSchedulerService(c.Logger)
 	c.IntrospectService = service.NewIntrospectorService(c.APIIntrospector)
 
@@ -161,6 +162,7 @@ func (c *Container) wireServices() error {
 	c.IntrospectHandler = handler.NewIntrospectHandler(c.IntrospectService)
 	c.AnalyticsHandler = handler.NewAnalyticsHandler(c.AnalyticsService, c.LogRepo)
 
+	c.AlertHandler = handler.NewAlertHandler(c.AlertService)
 	c.BaasRouteRegistry = baas.NewRouteRegistry(c.RESTGenerator, c.EndpointRepo, c.Logger)
 	c.LiveHandler = handler.NewLiveHandler(c.BaasRouteRegistry)
 

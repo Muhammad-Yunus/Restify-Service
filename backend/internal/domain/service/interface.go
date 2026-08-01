@@ -164,6 +164,7 @@ type AlertService interface {
 	DeleteRule(ctx context.Context, id uuid.UUID) error
 	ToggleRule(ctx context.Context, id uuid.UUID, enabled bool) error
 	FireAlert(ctx context.Context, event *entity.AlertEvent) error
+	ListRecentEvents(ctx context.Context, workspaceID uuid.UUID, limit int) ([]*entity.AlertEvent, error)
 }
 
 // EmailService sends email notifications.

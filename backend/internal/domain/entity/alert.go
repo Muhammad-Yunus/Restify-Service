@@ -26,6 +26,14 @@ const (
 	ActionMQTT    AlertActionType = "mqtt"
 )
 
+// AlertAction represents a notification delivery configuration.
+type AlertAction struct {
+	Type        AlertActionType `json:"type"`
+	Recipient   string          `json:"recipient,omitempty"`
+	Endpoint    string          `json:"endpoint,omitempty"`
+	Topic       string          `json:"topic,omitempty"`
+}
+
 // AlertRule represents an alert configuration.
 type AlertRule struct {
 	ID            uuid.UUID    `json:"id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`

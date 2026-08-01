@@ -263,7 +263,7 @@ func (s *analyticsServiceStub) GetEndpointMetrics(ctx context.Context, endpointI
 type alertServiceStub struct{}
 
 // NewAlertService constructs the alert service.
-func NewAlertService(alertRepo repository.AlertRepository, queue repository.MessageQueue, email EmailService, logger repository.Logger) AlertService {
+func NewAlertService(alertRepo repository.AlertRepository, queue repository.MessageQueue, email EmailService, logger repository.Logger, mqtt repository.MQTTBroker) AlertService {
 	return &alertServiceStub{}
 }
 
@@ -293,6 +293,10 @@ func (s *alertServiceStub) ToggleRule(ctx context.Context, id uuid.UUID, enabled
 
 func (s *alertServiceStub) FireAlert(ctx context.Context, event *entity.AlertEvent) error {
 	return errStubNotImplemented
+}
+
+func (s *alertServiceStub) ListRecentEvents(ctx context.Context, workspaceID uuid.UUID, limit int) ([]*entity.AlertEvent, error) {
+	return nil, errStubNotImplemented
 }
 
 type emailServiceStub struct{}

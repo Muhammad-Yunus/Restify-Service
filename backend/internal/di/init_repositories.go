@@ -125,8 +125,8 @@ func initAnalyticsRepo(db repository.DB, gormDB *gorm.DB) (repository.AnalyticsR
 	return apprepo.NewAnalyticsRepository(db, gormDB), nil
 }
 
-func initAlertRepo() (repository.AlertRepository, error) {
-	return &alertRepoStub{}, nil
+func initAlertRepo(db repository.DB, gormDB *gorm.DB) (repository.AlertRepository, error) {
+	return apprepo.NewAlertRepository(db, gormDB), nil
 }
 
 func initUserRepository(pgDB repository.DB, gormDB *gorm.DB) repository.UserRepository {

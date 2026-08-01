@@ -20,6 +20,7 @@ type HandlerDeps struct {
 	IntrospectHandler *httpHandler.IntrospectHandler
 	LiveHandler       *httpHandler.LiveHandler
 	AnalyticsHandler  *httpHandler.AnalyticsHandler
+	AlertHandler      *httpHandler.AlertHandler
 	AuthMW            *middleware.AuthMiddleware
 }
 
@@ -117,5 +118,16 @@ func RegisterAll(r *gin.Engine, deps *HandlerDeps, rateLimiter *middleware.RateL
 		analyticsGroup.GET("/overview/:workspace_id", deps.AnalyticsHandler.Overview)
 		analyticsGroup.GET("/endpoints/:endpoint_id/metrics", deps.AnalyticsHandler.EndpointMetrics)
 		analyticsGroup.GET("/logs", deps.AnalyticsHandler.SearchLogs)
+	}
+
+	// Alert routes (authenticated)
+	alertGroup := r.Group("/api/v1/alerts", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		alertGroup.GET("/:workspace_id", deps.AlertHandler.List)
+		alertGroup.POST("/:workspace_id", deps.AlertHandler.Create)
+		alertGroup.PUT("/:workspace_id/:id/toggle", deps.AlertHandler.Toggle)
+		alertGroup.PATCH("/:workspace_id/:id", deps.AlertHandler.Update)
+		alertGroup.DELETE("/:workspace_id/:id", deps.AlertHandler.Delete)
+		alertGroup.GET("/:workspace_id/events", deps.AlertHandler.ListEvents)
 	}
 }
