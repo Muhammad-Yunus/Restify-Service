@@ -55,6 +55,19 @@ func RegisterCollectionRoutes(r *gin.Engine, colHandler *handler.CollectionHandl
 	}
 }
 
+// RegisterEndpointRoutes registers endpoint-related routes.
+func RegisterEndpointRoutes(r *gin.Engine, epHandler *handler.EndpointHandler, authMW *middleware.AuthMiddleware) {
+	endpoints := r.Group("/api/v1/endpoints")
+	{
+		endpoints.GET("", authMW.RequireAuth(), epHandler.List)
+		endpoints.POST("", authMW.RequireAuth(), epHandler.Create)
+		endpoints.GET("/:id", authMW.RequireAuth(), epHandler.GetByID)
+		endpoints.PATCH("/:id", authMW.RequireAuth(), epHandler.Update)
+		endpoints.DELETE("/:id", authMW.RequireRole("administrator"), epHandler.Delete)
+		endpoints.POST("/:id/toggle", authMW.RequireAuth(), epHandler.Toggle)
+	}
+}
+
 // RegisterAuthRoutes registers authentication-related routes.
 func RegisterAuthRoutes(r *gin.Engine, authHandler *handler.AuthHandler) {
 	auth := r.Group("/api/v1/auth")
