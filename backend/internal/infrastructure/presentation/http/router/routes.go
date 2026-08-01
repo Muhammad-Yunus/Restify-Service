@@ -43,6 +43,18 @@ func RegisterTeamRoutes(r *gin.Engine, teamHandler *handler.TeamHandler, authMW 
 	}
 }
 
+// RegisterCollectionRoutes registers collection-related routes.
+func RegisterCollectionRoutes(r *gin.Engine, colHandler *handler.CollectionHandler, authMW *middleware.AuthMiddleware) {
+	collections := r.Group("/api/v1/collections")
+	{
+		collections.GET("", authMW.RequireAuth(), colHandler.List)
+		collections.POST("", authMW.RequireAuth(), colHandler.Create)
+		collections.GET("/:id", authMW.RequireAuth(), colHandler.GetByID)
+		collections.PATCH("/:id", authMW.RequireAuth(), colHandler.Update)
+		collections.DELETE("/:id", authMW.RequireRole("administrator"), colHandler.Delete)
+	}
+}
+
 // RegisterAuthRoutes registers authentication-related routes.
 func RegisterAuthRoutes(r *gin.Engine, authHandler *handler.AuthHandler) {
 	auth := r.Group("/api/v1/auth")
