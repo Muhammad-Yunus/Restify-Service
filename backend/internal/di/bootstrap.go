@@ -18,6 +18,7 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 	wah "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/websocket"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/tracing"
 )
 
 // Container holds all application dependencies.
@@ -78,6 +79,8 @@ type Container struct {
 	EventBus          *service.EventBus
 	WSBus             *service.WSBus
 	WSHandler         *handler.WebSocketHandler
+	TracerProvider    *tracing.TracerProvider
+	Tracer            interface{ Start(ctx context.Context, name string, opts ...interface{}) (context.Context, interface{}) }
 
 	closer []func(context.Context) error
 }
@@ -133,6 +136,10 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 		return nil, fmt.Errorf("init mqtt: %w", err)
 	}
 	c.registerClose(c.MQTT.Close)
+
+	if err := c.initTracing(ctx, cfg); err != nil {
+		return nil, fmt.Errorf("init tracing: %w", err)
+	}
 
 	if err := c.wireServices(); err != nil {
 		return nil, err
@@ -234,6 +241,24 @@ func (c *Container) wireServices() error {
 
 	c.Router = initRouter(c.Config.Server.Env, c.RateLimiter, c)
 
+	return nil
+}
+
+func (c *Container) initTracing(ctx context.Context, cfg *config.Config) error {
+	if !cfg.OTEL.Enabled {
+		return nil
+	}
+	if cfg.OTEL.Endpoint == "" {
+		return fmt.Errorf("tracing endpoint is required when tracing is enabled")
+	}
+
+	var err error
+	c.TracerProvider, err = tracing.NewTracerProvider(ctx, cfg.OTEL.Endpoint, "forgebase")
+	if err != nil {
+		return fmt.Errorf("create tracer provider: %w", err)
+	}
+
+	c.registerClose(c.TracerProvider.Shutdown)
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/router"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/tracing"
 )
 
 // initRouter sets up the Gin HTTP router with routes, middleware, and dynamic BaaS routing.
@@ -28,6 +29,11 @@ func initRouter(env string, rateLimit *middleware.RateLimitMiddleware, deps *Con
 
 	// Register WebSocket endpoint (public)
 	ginRouter.Engine().GET("/ws", deps.WSHandler.Handle)
+
+	// Add OpenTelemetry middleware if enabled
+	if deps.TracerProvider != nil {
+		ginRouter.Engine().Use(tracing.OTelMiddleware(deps.TracerProvider.Tracer("forgebase")))
+	}
 
 	// Set up dynamic BaaS routing
 	if deps.BaasRouteRegistry != nil {
