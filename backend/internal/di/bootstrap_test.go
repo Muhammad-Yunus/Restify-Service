@@ -55,11 +55,7 @@ func testContainer(t *testing.T) *Container {
 	cfg := testConfig()
 	c := &Container{Config: cfg}
 
-	logger, err := initLogger(cfg.Logging)
-	if err != nil {
-		t.Fatalf("init logger: %v", err)
-	}
-
+	logger := initLogger(cfg.Logging)
 	c.Logger = logger
 
 	c.DB = &dbStub{}

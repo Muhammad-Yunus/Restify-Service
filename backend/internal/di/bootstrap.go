@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"github.com/muhammadyunus/Restify-Service/internal/config"
@@ -23,7 +22,7 @@ type Container struct {
 	Queue  repository.MessageQueue
 	MQTT   repository.MQTTBroker
 
-	Router *gin.Engine
+	Router repository.HTTPRouter
 
 	AuthService       service.AuthService
 	UserService       service.UserService
@@ -52,10 +51,7 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 
 	var err error
 
-	c.Logger, err = initLogger(cfg.Logging)
-	if err != nil {
-		return nil, fmt.Errorf("init logger: %w", err)
-	}
+	c.Logger = initLogger(cfg.Logging)
 
 	c.DB, c.GORM, err = initDatabase(ctx, cfg.Database)
 	if err != nil {

@@ -15,11 +15,17 @@ type HTTPRouter interface {
 }
 
 // RouterGroup is a group of routes with shared middleware.
-//
-//nolint:unused // Fields are populated by the router implementation in Epic 13.
 type RouterGroup struct {
 	basePath   string
 	middleware []Middleware
+}
+
+// NewRouterGroup creates a route group with shared middleware.
+func NewRouterGroup(basePath string, middleware ...Middleware) *RouterGroup {
+	return &RouterGroup{
+		basePath:   basePath,
+		middleware: middleware,
+	}
 }
 
 // Middleware is a function that wraps an HTTP handler.

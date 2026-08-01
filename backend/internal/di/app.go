@@ -8,15 +8,13 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // App is the top-level application object.
 type App struct {
 	container *Container
 	server    *http.Server
-	engine    *gin.Engine
+	handler   http.Handler
 }
 
 // NewApp creates an App from a Container.
@@ -25,7 +23,7 @@ func NewApp(c *Container) (*App, error) {
 		return nil, errors.New("nil container")
 	}
 
-	return &App{container: c, engine: c.Router}, nil
+	return &App{container: c, handler: c.Router}, nil
 }
 
 // Run starts the HTTP server and blocks until ctx is cancelled.
@@ -34,7 +32,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.server = &http.Server{
 		Addr:    addr,
-		Handler: a.engine,
+		Handler: a.handler,
 	}
 
 	go func() {
