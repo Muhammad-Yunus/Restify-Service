@@ -51,7 +51,7 @@ func (s *authServiceStub) HasPermission(ctx context.Context, userID uuid.UUID, p
 type userServiceStub struct{}
 
 // NewUserService constructs the user service.
-func NewUserService(db repository.DB, auth AuthService, logger repository.Logger) UserService {
+func NewUserService(gormDB interface{}, logger repository.Logger) UserService {
 	return &userServiceStub{}
 }
 

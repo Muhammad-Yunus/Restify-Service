@@ -108,7 +108,7 @@ func (c *Container) wireServices() error {
 	}
 
 	c.AuthService = service.NewAuthService(c.DB, c.Cache)
-	c.UserService = service.NewUserService(c.DB, c.AuthService, c.Logger)
+	c.UserService = service.NewUserService(c.GORM, c.Logger)
 	c.WorkspaceService = service.NewWorkspaceService(c.DB, c.Logger)
 	c.TeamService = service.NewTeamService(c.DB, c.Logger)
 	c.CollectionService = service.NewCollectionService(c.DB, c.Logger)

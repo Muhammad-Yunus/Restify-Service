@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
+	apprepo "github.com/muhammadyunus/Restify-Service/internal/application/repository"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/entity"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 )
@@ -125,4 +127,8 @@ func initAnalyticsRepo() (repository.AnalyticsRepository, error) {
 
 func initAlertRepo() (repository.AlertRepository, error) {
 	return &alertRepoStub{}, nil
+}
+
+func initUserRepository(pgDB repository.DB, gormDB *gorm.DB) repository.UserRepository {
+	return apprepo.NewUserRepository(pgDB, gormDB)
 }
