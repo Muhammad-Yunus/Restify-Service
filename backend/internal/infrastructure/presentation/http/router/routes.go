@@ -32,6 +32,17 @@ func RegisterWorkspaceRoutes(r *gin.Engine, wsHandler *handler.WorkspaceHandler,
 	}
 }
 
+// RegisterTeamRoutes registers team-related routes.
+func RegisterTeamRoutes(r *gin.Engine, teamHandler *handler.TeamHandler, authMW *middleware.AuthMiddleware) {
+	teams := r.Group("/api/v1/teams")
+	{
+		teams.GET("/:id", authMW.RequireAuth(), teamHandler.GetByID)
+		teams.POST("/:id/members", authMW.RequireAuth(), teamHandler.AddMember)
+		teams.GET("/:id/members", authMW.RequireAuth(), teamHandler.ListMembers)
+		teams.DELETE("/:id/members/:user_id", authMW.RequireAuth(), teamHandler.RemoveMember)
+	}
+}
+
 // RegisterAuthRoutes registers authentication-related routes.
 func RegisterAuthRoutes(r *gin.Engine, authHandler *handler.AuthHandler) {
 	auth := r.Group("/api/v1/auth")
