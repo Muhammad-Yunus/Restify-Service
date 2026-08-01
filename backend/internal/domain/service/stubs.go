@@ -78,8 +78,8 @@ func (s *userServiceStub) List(ctx context.Context, page, pageSize int) ([]*enti
 type workspaceServiceStub struct{}
 
 // NewWorkspaceService constructs the workspace service.
-func NewWorkspaceService(db repository.DB, logger repository.Logger) WorkspaceService {
-	return &workspaceServiceStub{}
+func NewWorkspaceService(gormDB interface{}, logger repository.Logger) WorkspaceService {
+  return &workspaceServiceStub{}
 }
 
 func (s *workspaceServiceStub) Create(ctx context.Context, name, description string, ownerID uuid.UUID) (*entity.Workspace, error) {

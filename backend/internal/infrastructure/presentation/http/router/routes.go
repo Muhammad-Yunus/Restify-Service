@@ -20,6 +20,18 @@ func RegisterUserRoutes(r *gin.Engine, userHandler *handler.UserHandler, authMW 
 	}
 }
 
+// RegisterWorkspaceRoutes registers workspace-related routes.
+func RegisterWorkspaceRoutes(r *gin.Engine, wsHandler *handler.WorkspaceHandler, authMW *middleware.AuthMiddleware) {
+	workspaces := r.Group("/api/v1/workspaces")
+	{
+		workspaces.GET("", authMW.RequireAuth(), wsHandler.List)
+		workspaces.POST("", authMW.RequireAuth(), wsHandler.Create)
+		workspaces.GET("/:id", authMW.RequireAuth(), wsHandler.GetByID)
+		workspaces.PATCH("/:id", authMW.RequireAuth(), wsHandler.Update)
+		workspaces.DELETE("/:id", authMW.RequireRole("administrator"), wsHandler.Delete)
+	}
+}
+
 // RegisterAuthRoutes registers authentication-related routes.
 func RegisterAuthRoutes(r *gin.Engine, authHandler *handler.AuthHandler) {
 	auth := r.Group("/api/v1/auth")
