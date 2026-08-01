@@ -9,6 +9,35 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 )
 
+//	@title			ForgeBase API
+//	@version		1.0
+//	@description	ForgeBase is a Backend-as-a-Service (BaaS) platform that allows developers to create REST APIs on top of PostgreSQL databases.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.email	support@forgebase.io
+
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+//	@schemes	http https
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Example: Bearer {token}
+//
+//	@securityDefinitions.apikey	AdminRole
+//	@in							header
+//	@name						Authorization
+//	@description				Required for admin-only endpoints. Example: Bearer {token}
+//	@securityDefinitions.apikey	WorkspaceAdminRole
+//	@in							header
+//	@name						Authorization
+//	@description				Required for workspace admin endpoints. Example: Bearer {token}
+
 // HandlerDeps holds all HTTP handlers.
 type HandlerDeps struct {
 	AuthHandler       *httpHandler.AuthHandler
@@ -26,8 +55,12 @@ type HandlerDeps struct {
 
 // routerDeps holds dependencies needed for route registration.
 type routerDeps struct {
-	logRepo interface{ Create(context interface{}, entry interface{}) error }
-	logger  interface{ Error(ctx interface{}, msg string, v ...interface{}) }
+	logRepo interface {
+		Create(context interface{}, entry interface{}) error
+	}
+	logger interface {
+		Error(ctx interface{}, msg string, v ...interface{})
+	}
 }
 
 // RegisterAll registers all API routes with versioning.

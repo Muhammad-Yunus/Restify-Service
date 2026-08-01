@@ -11,7 +11,7 @@ import (
 
 // OpenAPIHandler handles GET /openapi.json and GET /openapi.yaml endpoints.
 type OpenAPIHandler struct {
-	generator      *APIDocGenerator
+	generator       *APIDocGenerator
 	endpointFetcher func(r *http.Request) ([]*entity.Endpoint, error)
 }
 

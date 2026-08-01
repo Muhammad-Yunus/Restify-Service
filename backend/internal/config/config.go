@@ -14,15 +14,15 @@ import (
 
 // Config holds all application configuration.
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	RabbitMQ RabbitMQConfig
-	SMTP     SMTPConfig
-	EMQX     EMQXConfig
-	Logging  LoggingConfig
-	OTEL     OTELConfig
-	JWT      JWTConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Redis     RedisConfig
+	RabbitMQ  RabbitMQConfig
+	SMTP      SMTPConfig
+	EMQX      EMQXConfig
+	Logging   LoggingConfig
+	OTEL      OTELConfig
+	JWT       JWTConfig
 	RateLimit RateLimitConfig
 }
 

@@ -22,7 +22,17 @@ func NewWorkspaceHandler(ws service.WorkspaceService) *WorkspaceHandler {
 	return &WorkspaceHandler{workspaceService: ws}
 }
 
-// Create handles POST /api/v1/workspaces
+// @Summary		Create workspace
+// @Description	Create a new workspace
+// @Tags			workspaces
+// @Accept			json
+// @Produce		json
+// @Param			body	body		object	true	"Workspace data"
+// @Success		201		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/workspaces [post]
+// @Security		BearerAuth
 func (h *WorkspaceHandler) Create(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required,max=255"`
@@ -46,7 +56,16 @@ func (h *WorkspaceHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, toWorkspaceDTO(ws))
 }
 
-// List handles GET /api/v1/workspaces
+// @Summary		List workspaces
+// @Description	List workspaces with pagination
+// @Tags			workspaces
+// @Produce		json
+// @Param			page		query		int	false	"Page number"	default(1)
+// @Param			page_size	query		int	false	"Page size"		default(20)
+// @Success		200			{object}	map[string]interface{}
+// @Failure		500			{object}	map[string]interface{}
+// @Router			/api/v1/workspaces [get]
+// @Security		BearerAuth
 func (h *WorkspaceHandler) List(c *gin.Context) {
 	ownerID, _ := uuid.Parse(c.GetString("user_id"))
 
@@ -65,7 +84,16 @@ func (h *WorkspaceHandler) List(c *gin.Context) {
 	})
 }
 
-// GetByID handles GET /api/v1/workspaces/:id
+// @Summary		Get workspace by ID
+// @Description	Get a workspace by ID
+// @Tags			workspaces
+// @Produce		json
+// @Param			id	path		string	true	"Workspace ID"	format(uuid)
+// @Success		200	{object}	map[string]interface{}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:id [get]
+// @Security		BearerAuth
 func (h *WorkspaceHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -82,7 +110,18 @@ func (h *WorkspaceHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, toWorkspaceDTO(ws))
 }
 
-// Update handles PATCH /api/v1/workspaces/:id
+// @Summary		Update workspace
+// @Description	Update workspace information
+// @Tags			workspaces
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string	true	"Workspace ID"	format(uuid)
+// @Param			body	body		object	true	"Workspace updates"
+// @Success		200		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		404		{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:id [patch]
+// @Security		BearerAuth
 func (h *WorkspaceHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -105,7 +144,17 @@ func (h *WorkspaceHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, toWorkspaceDTO(ws))
 }
 
-// Delete handles DELETE /api/v1/workspaces/:id
+// @Summary		Delete workspace
+// @Description	Delete a workspace by ID (admin only)
+// @Tags			workspaces
+// @Produce		json
+// @Param			id	path		string	true	"Workspace ID"	format(uuid)
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:id [delete]
+// @Security		BearerAuth
+// @Security		AdminRole
 func (h *WorkspaceHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

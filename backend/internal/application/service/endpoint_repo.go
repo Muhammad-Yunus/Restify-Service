@@ -90,7 +90,7 @@ func (r *ServiceEndpointRepo) Update(ctx context.Context, ep *entity.Endpoint) e
 		"param_headers":        ep.ParamHeaders,
 		"body_mapping_json":    ep.BodyMappingJSON,
 	}).Error; err != nil {
-		return fmt.Errorf("update endpoint %s: %w",ep.ID, err)
+		return fmt.Errorf("update endpoint %s: %w", ep.ID, err)
 	}
 	return nil
 }

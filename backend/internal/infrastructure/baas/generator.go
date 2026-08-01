@@ -83,9 +83,9 @@ func (g *restGeneratorImpl) handleInsertTable(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"message":    "table insert handler",
-		"table":      ep.TableName,
-		"schema":     ep.Schema,
+		"message": "table insert handler",
+		"table":   ep.TableName,
+		"schema":  ep.Schema,
 	})
 }
 
@@ -95,9 +95,9 @@ func (g *restGeneratorImpl) handleUpdateTable(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
-		 "message":    "table update handler",
-		"table":      ep.TableName,
-		"schema":     ep.Schema,
+		"message": "table update handler",
+		"table":   ep.TableName,
+		"schema":  ep.Schema,
 	})
 }
 
@@ -107,9 +107,9 @@ func (g *restGeneratorImpl) handleDeleteTable(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
-		"message":    "table delete handler",
-		"table":      ep.TableName,
-		"schema":     ep.Schema,
+		"message": "table delete handler",
+		"table":   ep.TableName,
+		"schema":  ep.Schema,
 	})
 }
 

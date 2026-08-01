@@ -17,12 +17,12 @@ type endpointSchema struct {
 
 // OpenAPI represents a minimal OpenAPI v3 document.
 type OpenAPI struct {
-	OpenAPI    string           `json:"openapi" yaml:"openapi"`
-	Info       Info             `json:"info" yaml:"info"`
-	Servers    []Server         `json:"servers,omitempty" yaml:"servers,omitempty"`
-	Tags       []Tag            `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Paths      map[string]*PathItem `json:"paths" yaml:"paths"`
-	Security   []SecurityReq    `json:"security,omitempty" yaml:"security,omitempty"`
+	OpenAPI  string               `json:"openapi" yaml:"openapi"`
+	Info     Info                 `json:"info" yaml:"info"`
+	Servers  []Server             `json:"servers,omitempty" yaml:"servers,omitempty"`
+	Tags     []Tag                `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Paths    map[string]*PathItem `json:"paths" yaml:"paths"`
+	Security []SecurityReq        `json:"security,omitempty" yaml:"security,omitempty"`
 }
 
 // Info holds API metadata.
@@ -34,14 +34,14 @@ type Info struct {
 
 // Server describes an API server.
 type Server struct {
-	URL         string         `json:"url,omitempty" yaml:"url,omitempty"`
-	Description string         `json:"description,omitempty" yaml:"description,omitempty"`
+	URL         string `json:"url,omitempty" yaml:"url,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
 // Tag groups API endpoints.
 type Tag struct {
-	Name   string `json:"name"`
-	Desc   string `json:"description,omitempty" yaml:"description,omitempty"`
+	Name string `json:"name"`
+	Desc string `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
 // Paths is the paths map: path string -> PathItem.
@@ -52,47 +52,47 @@ type PathKey string
 
 // PathItem represents all HTTP methods for a single path.
 type PathItem struct {
-	Get     *Operation `json:"get,omitempty" yaml:"get,omitempty"`
-	Post    *Operation `json:"post,omitempty" yaml:"post,omitempty"`
-	Put     *Operation `json:"put,omitempty" yaml:"put,omitempty"`
-	Delete  *Operation `json:"delete,omitempty" yaml:"delete,omitempty"`
-	Patch   *Operation `json:"patch,omitempty" yaml:"patch,omitempty"`
+	Get        *Operation        `json:"get,omitempty" yaml:"get,omitempty"`
+	Post       *Operation        `json:"post,omitempty" yaml:"post,omitempty"`
+	Put        *Operation        `json:"put,omitempty" yaml:"put,omitempty"`
+	Delete     *Operation        `json:"delete,omitempty" yaml:"delete,omitempty"`
+	Patch      *Operation        `json:"patch,omitempty" yaml:"patch,omitempty"`
 	Parameters []CommonParameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 }
 
 // Operation describes a single HTTP operation.
 type Operation struct {
-	Tags         []string              `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Summary      string                `json:"summary,omitempty" yaml:"summary,omitempty"`
-	Description  string                `json:"description,omitempty" yaml:"description,omitempty"`
-	OperationID  string                `json:"operationId" yaml:"operationId"`
-	Parameters   []Param               `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	Request      *RequestBody          `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
-	Responses    map[string]*Response  `json:"responses" yaml:"responses"`
-	Security     []SecurityReq         `json:"security,omitempty" yaml:"security,omitempty"`
+	Tags        []string             `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Summary     string               `json:"summary,omitempty" yaml:"summary,omitempty"`
+	Description string               `json:"description,omitempty" yaml:"description,omitempty"`
+	OperationID string               `json:"operationId" yaml:"operationId"`
+	Parameters  []Param              `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	Request     *RequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
+	Responses   map[string]*Response `json:"responses" yaml:"responses"`
+	Security    []SecurityReq        `json:"security,omitempty" yaml:"security,omitempty"`
 }
 
 // CommonParameter is a parameter that can appear in PathItem.Parameters or Operation.Parameters.
 type CommonParameter struct {
-	Name        string      `json:"name" yaml:"name"`
-	In          string      `json:"in" yaml:"in"`
-	Description string      `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    bool        `json:"required,omitempty" yaml:"required,omitempty"`
-	Schema      *Schema     `json:"schema,omitempty" yaml:"schema,omitempty"`
+	Name        string  `json:"name" yaml:"name"`
+	In          string  `json:"in" yaml:"in"`
+	Description string  `json:"description,omitempty" yaml:"description,omitempty"`
+	Required    bool    `json:"required,omitempty" yaml:"required,omitempty"`
+	Schema      *Schema `json:"schema,omitempty" yaml:"schema,omitempty"`
 }
 
 // Param is an operation-level parameter.
 type Param struct {
-	Name        string `json:"name" yaml:"name"`
-	In          string `json:"in" yaml:"in"` // path, query, header, cookie
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    bool   `json:"required,omitempty" yaml:"required,omitempty"`
+	Name        string  `json:"name" yaml:"name"`
+	In          string  `json:"in" yaml:"in"` // path, query, header, cookie
+	Description string  `json:"description,omitempty" yaml:"description,omitempty"`
+	Required    bool    `json:"required,omitempty" yaml:"required,omitempty"`
 	Schema      *Schema `json:"schema,omitempty" yaml:"schema,omitempty"`
 }
 
 // RequestBody describes the expected request body.
 type RequestBody struct {
-	Description string               `json:"description,omitempty" yaml:"description,omitempty"`
+	Description string                `json:"description,omitempty" yaml:"description,omitempty"`
 	Content     map[string]*MediaType `json:"content" yaml:"content"`
 }
 
@@ -103,20 +103,20 @@ type MediaType struct {
 
 // Response describes a single response.
 type Response struct {
-	Description string               `json:"description" yaml:"description"`
-	Content     map[string]*MediaType `json:"content,omitempty" yaml:"content,omitempty"`
+	Description string                      `json:"description" yaml:"description"`
+	Content     map[string]*MediaType       `json:"content,omitempty" yaml:"content,omitempty"`
 	Headers     map[string]*CommonParameter `json:"headers,omitempty" yaml:"headers,omitempty"`
 }
 
 // Schema describes the shape of a parameter or response value.
 type Schema struct {
-	Type         string              `json:"type,omitempty" yaml:"type,omitempty"`
-	Description  string              `json:"description,omitempty" yaml:"description,omitempty"`
-	Items        *Schema             `json:"items,omitempty" yaml:"items,omitempty"`
-	Properties   map[string]*Schema  `json:"properties,omitempty" yaml:"properties,omitempty"`
-	Required     []string            `json:"required,omitempty" yaml:"required,omitempty"`
-	Ref          string              `json:"$$ref,omitempty" yaml:"$$ref,omitempty"`
-	AnyOf        []*Schema           `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
+	Type        string             `json:"type,omitempty" yaml:"type,omitempty"`
+	Description string             `json:"description,omitempty" yaml:"description,omitempty"`
+	Items       *Schema            `json:"items,omitempty" yaml:"items,omitempty"`
+	Properties  map[string]*Schema `json:"properties,omitempty" yaml:"properties,omitempty"`
+	Required    []string           `json:"required,omitempty" yaml:"required,omitempty"`
+	Ref         string             `json:"$$ref,omitempty" yaml:"$$ref,omitempty"`
+	AnyOf       []*Schema          `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
 }
 
 // SecurityReq defines a security requirement.
@@ -189,8 +189,8 @@ func buildParamSchema(params []ParamSchema) *Schema {
 		}
 	}
 	return &Schema{
-		Type:     "object",
+		Type:       "object",
 		Properties: props,
-		Required: required,
+		Required:   required,
 	}
 }

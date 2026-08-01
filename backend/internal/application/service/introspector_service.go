@@ -22,7 +22,7 @@ func (s *IntrospectorService) DiscoverTables(ctx context.Context, schema string)
 	if schema == "" {
 		schema = "public"
 	}
-	tables, err  := s.introspector.DiscoverTables(ctx, schema)
+	tables, err := s.introspector.DiscoverTables(ctx, schema)
 	if err != nil {
 		return nil, fmt.Errorf("discover tables: %w", err)
 	}

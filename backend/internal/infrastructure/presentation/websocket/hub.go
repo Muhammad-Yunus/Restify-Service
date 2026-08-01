@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 // Upgrader configures WebSocket upgrade.
@@ -93,9 +93,9 @@ func (h *Hub) Run(ctx context.Context) {
 
 // WebSocketMessage represents a message sent over WebSocket.
 type WebSocketMessage struct {
-	Type    string      `json:"type"`
-	Topic   string      `json:"topic,omitempty"`
-	Payload any         `json:"payload,omitempty"`
+	Type    string `json:"type"`
+	Topic   string `json:"topic,omitempty"`
+	Payload any    `json:"payload,omitempty"`
 }
 
 // RegisterClient adds a client to the hub.
@@ -210,7 +210,7 @@ func (h *Hub) GetClientCount() int {
 
 // Close closes the hub and all connected clients.
 func (h *Hub) Close(ctx context.Context) {
-	h.closeAll ()
+	h.closeAll()
 }
 
 func (h *Hub) closeAll() {

@@ -26,22 +26,22 @@ func RequestLoggingMiddleware(logRepo repository.APILogRepository, logger reposi
 		userID, _ := c.Get("user_id")
 
 		logEntry := &entity.APILog{
-			RequestID: requestID.(string),
-			Method:    c.Request.Method,
-			Path:      path,
+			RequestID:  requestID.(string),
+			Method:     c.Request.Method,
+			Path:       path,
 			StatusCode: statusCode,
 			LatencyMs:  latency,
 			LogLevel:   logLevel,
 			CreatedAt:  start,
 		}
 
-	if userID != nil {
-		if s, ok := userID.(string); ok && s != "" {
-			if uid, err := uuid.Parse(s); err == nil {
-				logEntry.UserID = &uid
+		if userID != nil {
+			if s, ok := userID.(string); ok && s != "" {
+				if uid, err := uuid.Parse(s); err == nil {
+					logEntry.UserID = &uid
+				}
 			}
 		}
-	}
 
 		// Async write to avoid blocking response
 		go func() {

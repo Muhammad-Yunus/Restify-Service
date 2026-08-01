@@ -58,9 +58,9 @@ func (g *APIDocGenerator) GenerateOpenAPI(ctx context.Context, endpoints []*enti
 		Servers: []Server{
 			{URL: baseURL, Description: "API Server"},
 		},
-		Paths:     make(map[string]*PathItem),
-		Tags:      make([]Tag, 0),
-		Security:  []SecurityReq{{BearerToken: []string{}}},
+		Paths:    make(map[string]*PathItem),
+		Tags:     make([]Tag, 0),
+		Security: []SecurityReq{{BearerToken: []string{}}},
 	}
 
 	// Group by collection name for tags
@@ -241,7 +241,7 @@ func buildOutputSchema(ep *entity.Endpoint) *Schema {
 		return &Schema{
 			Type: "object",
 			Properties: map[string]*Schema{
-				"data": {Type: "object"},
+				"data":   {Type: "object"},
 				"status": {Type: "string"},
 			},
 		}

@@ -22,7 +22,16 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-// GetByID handles GET /api/v1/users/:id.
+// @Summary		Get user by ID
+// @Description	Get a user by their ID
+// @Tags			users
+// @Produce		json
+// @Param			id	path		string	true	"User ID"	format(uuid)
+// @Success		200	{object}	map[string]interface{}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/users/:id [get]
+// @Security		BearerAuth
 func (h *UserHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -39,7 +48,16 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, toUserDTO(user))
 }
 
-// List handles GET /api/v1/users.
+// @Summary		List users
+// @Description	List all users with pagination
+// @Tags			users
+// @Produce		json
+// @Param			page		query		int	false	"Page number"	default(1)
+// @Param			page_size	query		int	false	"Page size"		default(20)
+// @Success		200			{object}	map[string]interface{}
+// @Failure		500			{object}	map[string]interface{}
+// @Router			/api/v1/users [get]
+// @Security		BearerAuth
 func (h *UserHandler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
@@ -56,7 +74,18 @@ func (h *UserHandler) List(c *gin.Context) {
 	})
 }
 
-// Update handles PATCH /api/v1/users/:id.
+// @Summary		Update user
+// @Description	Update user information
+// @Tags			users
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string	true	"User ID"	format(uuid)
+// @Param			body	body		object	true	"User updates"
+// @Success		200		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		404		{object}	map[string]interface{}
+// @Router			/api/v1/users/:id [patch]
+// @Security		BearerAuth
 func (h *UserHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -79,7 +108,17 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, toUserDTO(user))
 }
 
-// Delete handles DELETE /api/v1/users/:id.
+// @Summary		Delete user
+// @Description	Delete a user by ID (admin only)
+// @Tags			users
+// @Produce		json
+// @Param			id	path		string	true	"User ID"	format(uuid)
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/users/:id [delete]
+// @Security		BearerAuth
+// @Security		AdminRole
 func (h *UserHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

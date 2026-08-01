@@ -37,3 +37,5 @@ logs/
 # Docs
 docs/swagger/*
 !docs/swagger/.gitkeep
+
+docs/

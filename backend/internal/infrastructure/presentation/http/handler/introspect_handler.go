@@ -19,7 +19,15 @@ func NewIntrospectHandler(introspectService *service.IntrospectorService) *Intro
 	return &IntrospectHandler{introspectService: introspectService}
 }
 
-// DiscoverTables returns all tables in a schema.
+// @Summary		Discover tables
+// @Description	Discover all tables in a PostgreSQL schema
+// @Tags			introspection
+// @Produce		json
+// @Param			schema	path		string	true	"Schema name"	default(public)
+// @Success		200		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/introspect/schemas/{schema}/tables [get]
+// @Security		BearerAuth
 func (h *IntrospectHandler) DiscoverTables(c *gin.Context) {
 	schema := c.DefaultQuery("schema", "public")
 
@@ -32,7 +40,15 @@ func (h *IntrospectHandler) DiscoverTables(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": tables})
 }
 
-// DiscoverFunctions returns all functions in a schema.
+// @Summary		Discover functions
+// @Description	Discover all functions in a PostgreSQL schema
+// @Tags			introspection
+// @Produce		json
+// @Param			schema	path		string	true	"Schema name"	default(public)
+// @Success		200		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/introspect/schemas/{schema}/functions [get]
+// @Security		BearerAuth
 func (h *IntrospectHandler) DiscoverFunctions(c *gin.Context) {
 	schema := c.DefaultQuery("schema", "public")
 
@@ -45,7 +61,15 @@ func (h *IntrospectHandler) DiscoverFunctions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": functions})
 }
 
-// DiscoverProcedures returns all procedures in a schema.
+// @Summary		Discover procedures
+// @Description	Discover all procedures in a PostgreSQL schema
+// @Tags			introspection
+// @Produce		json
+// @Param			schema	path		string	true	"Schema name"	default(public)
+// @Success		200		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/introspect/schemas/{schema}/procedures [get]
+// @Security		BearerAuth
 func (h *IntrospectHandler) DiscoverProcedures(c *gin.Context) {
 	schema := c.DefaultQuery("schema", "public")
 
@@ -58,7 +82,16 @@ func (h *IntrospectHandler) DiscoverProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": procedures})
 }
 
-// GetTableSchema returns column information for a table.
+// @Summary		Get table schema
+// @Description	Get column information for a table
+// @Tags			introspection
+// @Produce		json
+// @Param			schema	path		string	true	"Schema name"	default(public)
+// @Param			table	path		string	true	"Table name"
+// @Success		200		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/introspect/schemas/{schema}/tables/{table} [get]
+// @Security		BearerAuth
 func (h *IntrospectHandler) GetTableSchema(c *gin.Context) {
 	schema := c.DefaultQuery("schema", "public")
 	table := c.Param("table")
@@ -81,7 +114,16 @@ func (h *IntrospectHandler) GetTableSchema(c *gin.Context) {
 	}})
 }
 
-// GetFunctionSignature returns parameter information for a function/procedure.
+// @Summary		Get function signature
+// @Description	Get parameter information for a function/procedure
+// @Tags			introspection
+// @Produce		json
+// @Param			schema	path		string	true	"Schema name"	default(public)
+// @Param			name	path		string	true	"Function/Procedure name"
+// @Success		200		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/introspect/schemas/{schema}/functions/{name} [get]
+// @Security		BearerAuth
 func (h *IntrospectHandler) GetFunctionSignature(c *gin.Context) {
 	schema := c.DefaultQuery("schema", "public")
 	name := c.Param("name")

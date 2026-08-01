@@ -26,7 +26,16 @@ func NewAuthHandler(authService service.AuthService, jwtService *auth.JWTService
 	}
 }
 
-// Register handles POST /api/v1/auth/register.
+// @Summary		Register a new user
+// @Description	Register a new user with email and password
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			body	body		dto.RegisterRequest	true	"Registration data"
+// @Success		201		{object}	dto.AuthResponse
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		409		{object}	map[string]interface{}
+// @Router			/api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -70,7 +79,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
-// Login handles POST /api/v1/auth/login.
+// @Summary		Login
+// @Description	Login with email and password
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			body	body		dto.LoginRequest	true	"Login credentials"
+// @Success		200		{object}	dto.AuthResponse
+// @Failure		401		{object}	map[string]interface{}
+// @Router			/api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -94,7 +111,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
-// Refresh handles POST /api/v1/auth/refresh.
+// @Summary		Refresh access token
+// @Description	Refresh access token using refresh token
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			body	body		dto.RefreshRequest	true	"Refresh token"
+// @Success		200		{object}	dto.AuthResponse
+// @Failure		401		{object}	map[string]interface{}
+// @Router			/api/v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -118,7 +143,15 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	})
 }
 
-// Logout handles POST /api/v1/auth/logout.
+// @Summary		Logout
+// @Description	Logout and invalidate token
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	map[string]string
+// @Failure		500	{object}	map[string]interface{}
+// @Router			/api/v1/auth/logout [post]
+// @Security		BearerAuth
 func (h *AuthHandler) Logout(c *gin.Context) {
 	token := c.GetString("token")
 	if err := h.authService.Logout(c.Request.Context(), token); err != nil {

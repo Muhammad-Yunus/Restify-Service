@@ -14,6 +14,7 @@ import (
 	domservice "github.com/muhammadyunus/Restify-Service/internal/domain/service"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/auth"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/baas"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/email"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 	wah "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/websocket"
@@ -30,9 +31,9 @@ type Container struct {
 	Queue  repository.MessageQueue
 	MQTT   repository.MQTTBroker
 
-	Router          repository.HTTPRouter
-	RateLimiter     *middleware.RateLimitMiddleware
-	AuthMiddleware  *middleware.AuthMiddleware
+	Router         repository.HTTPRouter
+	RateLimiter    *middleware.RateLimitMiddleware
+	AuthMiddleware *middleware.AuthMiddleware
 
 	AuthHandler       *handler.AuthHandler
 	UserHandler       *handler.UserHandler
@@ -65,10 +66,10 @@ type Container struct {
 	EmailService     domservice.EmailService
 	SchedulerService domservice.SchedulerService
 
-	CacheService     *service.CacheService
-	CachedWorkspace  *service.CachedWorkspaceService
-	CachedUser       *service.CachedUserService
-	CachedEndpoint   *service.CachedEndpointService
+	CacheService    *service.CacheService
+	CachedWorkspace *service.CachedWorkspaceService
+	CachedUser      *service.CachedUserService
+	CachedEndpoint  *service.CachedEndpointService
 
 	IntrospectService *service.IntrospectorService
 	QueueService      *service.QueueService
@@ -169,7 +170,7 @@ func (c *Container) wireServices() error {
 	c.EndpointService = service.NewEndpointService(c.GORM, c.Logger)
 	c.APIIntrospector = baas.NewPostgreSQLIntrospector(c.DB)
 	c.RESTGenerator = baas.NewRESTGenerator(c.APIIntrospector, c.Logger)
-	c.EmailService = domservice.NewEmailService(c.Logger)
+	c.EmailService = email.NewSMTPEmailService(c.Config.SMTP)
 	c.AnalyticsService = domservice.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
 	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger, c.MQTT)
 	c.SchedulerService = service.NewSchedulerService(c.Logger)
@@ -184,6 +185,10 @@ func (c *Container) wireServices() error {
 	// Initialize message queue service and worker pool
 	c.QueueService = service.NewQueueService(c.Queue)
 	c.WorkerPool = service.NewWorkerPool(c.Logger)
+
+	// Register email consumer worker
+	emailConsumer := service.NewEmailConsumer(c.EmailService)
+	c.RegisterQueueWorker("email", "email.notifications", emailConsumer.Handle)
 
 	// Initialize MQTT service and event bus
 	c.MQTTService = service.NewMQTTService(c.MQTT)

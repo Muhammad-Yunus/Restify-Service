@@ -97,12 +97,12 @@ func (s *AlertService) dispatchAction(ctx context.Context, action entity.AlertAc
 
 func (s *AlertService) sendWebhook(ctx context.Context, action entity.AlertAction, event *entity.AlertEvent) {
 	payload, _ := json.Marshal(map[string]any{
-		"event_id":   event.ID.String(),
-		"trigger":    string(event.Trigger),
-		"threshold":  event.Threshold,
-		"current":    event.CurrentValue,
-		"message":    event.Message,
-		"timestamp":  event.CreatedAt,
+		"event_id":  event.ID.String(),
+		"trigger":   string(event.Trigger),
+		"threshold": event.Threshold,
+		"current":   event.CurrentValue,
+		"message":   event.Message,
+		"timestamp": event.CreatedAt,
 	})
 	if err := s.queue.Publish(ctx, "alerts.webhook", payload); err != nil {
 		s.logger.Error(ctx, "failed to publish webhook alert", "error", err)

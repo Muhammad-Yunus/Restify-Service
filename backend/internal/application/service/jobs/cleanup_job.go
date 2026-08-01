@@ -10,9 +10,9 @@ import (
 
 // CleanupJob handles periodic cleanup tasks.
 type CleanupJob struct {
-	logRepo      repository.APILogRepository
-	cache        repository.Cache
-	logger       repository.Logger
+	logRepo       repository.APILogRepository
+	cache         repository.Cache
+	logger        repository.Logger
 	retentionDays int
 }
 

@@ -79,7 +79,7 @@ type workspaceServiceStub struct{}
 
 // NewWorkspaceService constructs the workspace service.
 func NewWorkspaceService(gormDB interface{}, logger repository.Logger) WorkspaceService {
-  return &workspaceServiceStub{}
+	return &workspaceServiceStub{}
 }
 
 func (s *workspaceServiceStub) Create(ctx context.Context, name, description string, ownerID uuid.UUID) (*entity.Workspace, error) {
@@ -313,5 +313,3 @@ func (s *emailServiceStub) SendAlertEmail(ctx context.Context, recipient, subjec
 func (s *emailServiceStub) SendWelcomeEmail(ctx context.Context, recipient, name string) error {
 	return errStubNotImplemented
 }
-
-

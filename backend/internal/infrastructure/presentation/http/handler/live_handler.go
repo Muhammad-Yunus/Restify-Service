@@ -18,7 +18,13 @@ func NewLiveHandler(routeReg *baas.RouteRegistry) *LiveHandler {
 	return &LiveHandler{routeReg: routeReg}
 }
 
-// ListRegistered handles GET /api/v1/admin/endpoints
+// @Summary		List registered BaaS endpoints
+// @Description	Get list of all registered BaaS endpoints
+// @Tags			admin
+// @Produce		json
+// @Success		200	{object}	map[string]interface{}
+// @Router			/api/v1/admin/endpoints [get]
+// @Security		BearerAuth
 func (h *LiveHandler) ListRegistered(c *gin.Context) {
 	if h.routeReg == nil {
 		c.JSON(http.StatusOK, gin.H{"data": gin.H{"total": 0, "routes": []map[string]any{}}})

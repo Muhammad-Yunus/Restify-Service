@@ -1,4 +1,4 @@
-.PHONY: build run test test-unit test-integration lint lint-fix fmt migrate-up migrate-down clean help
+.PHONY: build run test test-unit test-integration lint lint-fix fmt migrate-up migrate-down clean swagger swagger-init swagger-fmt help
 
 APP_NAME=ForgeBase
 CMD=cmd/ForgeBase
@@ -32,6 +32,23 @@ migrate-up:
 
 migrate-down:
 	migrate -path migrations -database "$(DATABASE_URL)" down
+
+swagger: swagger-init
+	@echo "Swagger docs generated in docs/"
+
+swagger-init:
+	@echo "Generating Swagger documentation..."
+	@which swag > /dev/null || (echo "Installing swag CLI..." && go install github.com/swaggo/swag/cmd/swag@latest)
+	swag init --parseDepth 4 --parseInternal --output ./docs
+	@echo "Post-processing generated docs.go to remove unused fields..."
+	@if [ -f docs/docs.go ]; then \
+		sed -i.bak '/LeftDelim:/d; /RightDelim:/d' docs/docs.go && rm docs/docs.go.bak; \
+		echo "docs.go cleaned"; \
+	fi
+
+swagger-fmt:
+	@echo "Formatting Swagger annotations..."
+	swag fmt
 
 clean:
 	rm -rf bin/ coverage.out

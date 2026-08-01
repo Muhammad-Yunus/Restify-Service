@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/muhammadyunus/Restify-Service/internal/domain/service"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
+	"github.com/muhammadyunus/Restify-Service/internal/domain/service"
 )
 
 // PostgresIntrospector inspects PostgreSQL schemas and discovers tables, functions, and procedures.

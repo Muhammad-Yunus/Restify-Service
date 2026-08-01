@@ -21,7 +21,18 @@ func NewTeamHandler(ts service.TeamService) *TeamHandler {
 	return &TeamHandler{teamService: ts}
 }
 
-// Create handles POST /api/v1/workspaces/:ws_id/teams
+// @Summary		Create team
+// @Description	Create a new team in a workspace
+// @Tags			teams
+// @Accept			json
+// @Produce		json
+// @Param			ws_id	path		string	true	"Workspace ID"	format(uuid)
+// @Param			body	body		object	true	"Team data"
+// @Success		201		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:ws_id/teams [post]
+// @Security		BearerAuth
 func (h *TeamHandler) Create(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("ws_id"))
 	if err != nil {
@@ -46,7 +57,16 @@ func (h *TeamHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, toTeamDTO(team))
 }
 
-// GetByID handles GET /api/v1/teams/:id
+// @Summary		Get team by ID
+// @Description	Get a team by ID
+// @Tags			teams
+// @Produce		json
+// @Param			id	path		string	true	"Team ID"	format(uuid)
+// @Success		200	{object}	map[string]interface{}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/teams/:id [get]
+// @Security		BearerAuth
 func (h *TeamHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -63,7 +83,18 @@ func (h *TeamHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, toTeamDTO(team))
 }
 
-// AddMember handles POST /api/v1/teams/:id/members
+// @Summary		Add team member
+// @Description	Add a member to a team
+// @Tags			teams
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string	true	"Team ID"	format(uuid)
+// @Param			body	body		object	true	"Member data"
+// @Success		201		{object}	map[string]string
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/teams/:id/members [post]
+// @Security		BearerAuth
 func (h *TeamHandler) AddMember(c *gin.Context) {
 	teamID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -94,7 +125,16 @@ func (h *TeamHandler) AddMember(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "member added"})
 }
 
-// ListMembers handles GET /api/v1/teams/:id/members
+// @Summary		List team members
+// @Description	List all members of a team
+// @Tags			teams
+// @Produce		json
+// @Param			id	path		string	true	"Team ID"	format(uuid)
+// @Success		200	{object}	map[string]interface{}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		500	{object}	map[string]interface{}
+// @Router			/api/v1/teams/:id/members [get]
+// @Security		BearerAuth
 func (h *TeamHandler) ListMembers(c *gin.Context) {
 	teamID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -111,7 +151,17 @@ func (h *TeamHandler) ListMembers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": toMemberListDTO(members)})
 }
 
-// RemoveMember handles DELETE /api/v1/teams/:id/members/:user_id
+// @Summary		Remove team member
+// @Description	Remove a member from a team
+// @Tags			teams
+// @Produce		json
+// @Param			id		path		string	true	"Team ID"	format(uuid)
+// @Param			user_id	path		string	true	"User ID"	format(uuid)
+// @Success		200		{object}	map[string]string
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		404		{object}	map[string]interface{}
+// @Router			/api/v1/teams/:id/members/:user_id [delete]
+// @Security		BearerAuth
 func (h *TeamHandler) RemoveMember(c *gin.Context) {
 	teamID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

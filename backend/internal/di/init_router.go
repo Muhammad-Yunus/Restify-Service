@@ -1,7 +1,6 @@
 package di
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/router"

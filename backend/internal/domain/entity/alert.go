@@ -28,10 +28,10 @@ const (
 
 // AlertAction represents a notification delivery configuration.
 type AlertAction struct {
-	Type        AlertActionType `json:"type"`
-	Recipient   string          `json:"recipient,omitempty"`
-	Endpoint    string          `json:"endpoint,omitempty"`
-	Topic       string          `json:"topic,omitempty"`
+	Type      AlertActionType `json:"type"`
+	Recipient string          `json:"recipient,omitempty"`
+	Endpoint  string          `json:"endpoint,omitempty"`
+	Topic     string          `json:"topic,omitempty"`
 }
 
 // AlertRule represents an alert configuration.

@@ -22,7 +22,16 @@ func NewAlertHandler(alertService service.AlertService) *AlertHandler {
 	return &AlertHandler{alertService: alertService}
 }
 
-// List handles GET /api/v1/alerts/:workspace_id
+// @Summary		List alert rules
+// @Description	List all alert rules for a workspace
+// @Tags			alerts
+// @Produce		json
+// @Param			workspace_id	path		string	true	"Workspace ID"	format(uuid)
+// @Success		200				{object}	map[string]interface{}
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id [get]
+// @Security		BearerAuth
 func (h *AlertHandler) List(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("workspace_id"))
 	if err != nil {
@@ -37,7 +46,18 @@ func (h *AlertHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": toAlertRuleListDTO(rules)})
 }
 
-// Create handles POST /api/v1/alerts/:workspace_id
+// @Summary		Create alert rule
+// @Description	Create a new alert rule for a workspace
+// @Tags			alerts
+// @Accept			json
+// @Produce		json
+// @Param			workspace_id	path		string				true	"Workspace ID"	format(uuid)
+// @Param			body			body		entity.AlertRule	true	"Alert rule data"
+// @Success		201				{object}	map[string]interface{}
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id [post]
+// @Security		BearerAuth
 func (h *AlertHandler) Create(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("workspace_id"))
 	if err != nil {
@@ -58,7 +78,19 @@ func (h *AlertHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, toAlertRuleDTO(&rule))
 }
 
-// Update handles PATCH /api/v1/alerts/:workspace_id/:id
+// @Summary		Update alert rule
+// @Description	Update an alert rule
+// @Tags			alerts
+// @Accept			json
+// @Produce		json
+// @Param			workspace_id	path		string				true	"Workspace ID"	format(uuid)
+// @Param			id				path		string				true	"Alert Rule ID"	format(uuid)
+// @Param			body			body		entity.AlertRule	true	"Alert rule data"
+// @Success		200				{object}	map[string]interface{}
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id/:id [patch]
+// @Security		BearerAuth
 func (h *AlertHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -79,7 +111,17 @@ func (h *AlertHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, toAlertRuleDTO(&rule))
 }
 
-// Delete handles DELETE /api/v1/alerts/:workspace_id/:id
+// @Summary		Delete alert rule
+// @Description	Delete an alert rule
+// @Tags			alerts
+// @Produce		json
+// @Param			workspace_id	path		string	true	"Workspace ID"	format(uuid)
+// @Param			id				path		string	true	"Alert Rule ID"	format(uuid)
+// @Success		200				{object}	map[string]string
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		404				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id/:id [delete]
+// @Security		BearerAuth
 func (h *AlertHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -93,7 +135,19 @@ func (h *AlertHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "alert deleted"})
 }
 
-// Toggle handles PUT /api/v1/alerts/:workspace_id/:id/toggle
+// @Summary		Toggle alert rule
+// @Description	Toggle an alert rule's enabled/disabled status
+// @Tags			alerts
+// @Accept			json
+// @Produce		json
+// @Param			workspace_id	path		string	true	"Workspace ID"	format(uuid)
+// @Param			id				path		string	true	"Alert Rule ID"	format(uuid)
+// @Param			body			body		object	true	"Enabled status"
+// @Success		200				{object}	map[string]interface{}
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id/:id/toggle [put]
+// @Security		BearerAuth
 func (h *AlertHandler) Toggle(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -104,7 +158,7 @@ func (h *AlertHandler) Toggle(c *gin.Context) {
 		Enabled bool `json:"enabled"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ProblemDetail(http.StatusBadRequest, "Validation Error",	err.Error()))
+		c.JSON(http.StatusBadRequest, dto.ProblemDetail(http.StatusBadRequest, "Validation Error", err.Error()))
 		return
 	}
 	if err := h.alertService.ToggleRule(c.Request.Context(), id, body.Enabled); err != nil {
@@ -114,7 +168,17 @@ func (h *AlertHandler) Toggle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "alert toggled", "enabled": body.Enabled})
 }
 
-// ListEvents handles GET /api/v1/alerts/:workspace_id/events
+// @Summary		List alert events
+// @Description	List recent alert events for a workspace
+// @Tags			alerts
+// @Produce		json
+// @Param			workspace_id	path		string	true	"Workspace ID"		format(uuid)
+// @Param			limit			query		int		false	"Number of events"	default(20)
+// @Success		200				{object}	map[string]interface{}
+// @Failure		400				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/alerts/:workspace_id/events [get]
+// @Security		BearerAuth
 func (h *AlertHandler) ListEvents(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("workspace_id"))
 	if err != nil {

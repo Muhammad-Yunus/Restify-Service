@@ -31,7 +31,17 @@ func NewAnalyticsHandler(
 	}
 }
 
-// Overview handles GET /api/v1/analytics/overview
+// @Summary		Get analytics overview
+// @Description	Get analytics overview for a workspace
+// @Tags			analytics
+// @Produce		json
+// @Param			workspace_id	path		string	true	"Workspace ID"	format(uuid)
+// @Param			from			query		string	false	"Start time (RFC3339)"
+// @Param			to				query		string	false	"End time (RFC3339)"
+// @Success		200				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/analytics/overview/:workspace_id [get]
+// @Security		BearerAuth
 func (h *AnalyticsHandler) Overview(c *gin.Context) {
 	workspaceID, _ := uuid.Parse(c.Param("workspace_id"))
 
@@ -64,7 +74,17 @@ func (h *AnalyticsHandler) Overview(c *gin.Context) {
 	c.JSON(http.StatusOK, toOverviewDTO(overview))
 }
 
-// EndpointMetrics handles GET /api/v1/analytics/endpoints/:endpoint_id/metrics
+// @Summary		Get endpoint metrics
+// @Description	Get metrics for a specific endpoint
+// @Tags			analytics
+// @Produce		json
+// @Param			endpoint_id	path		string	true	"Endpoint ID"	format(uuid)
+// @Param			from		query		string	false	"Start time (RFC3339)"
+// @Param			to			query		string	false	"End time (RFC3339)"
+// @Success		200			{object}	map[string]interface{}
+// @Failure		500			{object}	map[string]interface{}
+// @Router			/api/v1/analytics/endpoints/:endpoint_id/metrics [get]
+// @Security		BearerAuth
 func (h *AnalyticsHandler) EndpointMetrics(c *gin.Context) {
 	endpointID, err := uuid.Parse(c.Param("endpoint_id"))
 	if err != nil {
@@ -93,7 +113,21 @@ func (h *AnalyticsHandler) EndpointMetrics(c *gin.Context) {
 	c.JSON(http.StatusOK, toMetricListDTO(metrics))
 }
 
-// SearchLogs handles GET /api/v1/analytics/logs
+// @Summary		Search API logs
+// @Description	Search API logs with pagination and filters
+// @Tags			analytics
+// @Produce		json
+// @Param			page			query		int		false	"Page number"	default(1)
+// @Param			page_size		query		int		false	"Page size"		default(50)
+// @Param			workspace_id	query		string	false	"Workspace ID"	format(uuid)
+// @Param			endpoint_id		query		string	false	"Endpoint ID"	format(uuid)
+// @Param			level			query		string	false	"Log level"
+// @Param			method			query		string	false	"HTTP method"
+// @Param			path			query		string	false	"Request path"
+// @Success		200				{object}	map[string]interface{}
+// @Failure		500				{object}	map[string]interface{}
+// @Router			/api/v1/analytics/logs [get]
+// @Security		BearerAuth
 func (h *AnalyticsHandler) SearchLogs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "50"))

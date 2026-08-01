@@ -21,7 +21,18 @@ func NewCollectionHandler(cs service.CollectionService) *CollectionHandler {
 	return &CollectionHandler{collectionService: cs}
 }
 
-// Create handles POST /api/v1/workspaces/:ws_id/collections
+// @Summary		Create collection
+// @Description	Create a new collection in a workspace
+// @Tags			collections
+// @Accept			json
+// @Produce		json
+// @Param			ws_id	path		string	true	"Workspace ID"	format(uuid)
+// @Param			body	body		object	true	"Collection data"
+// @Success		201		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:ws_id/collections [post]
+// @Security		BearerAuth
 func (h *CollectionHandler) Create(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("ws_id"))
 	if err != nil {
@@ -47,7 +58,16 @@ func (h *CollectionHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, toCollectionDTO(col))
 }
 
-// List handles GET /api/v1/workspaces/:ws_id/collections
+// @Summary		List collections
+// @Description	List collections in a workspace
+// @Tags			collections
+// @Produce		json
+// @Param			ws_id	path		string	true	"Workspace ID"	format(uuid)
+// @Success		200		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/api/v1/workspaces/:ws_id/collections [get]
+// @Security		BearerAuth
 func (h *CollectionHandler) List(c *gin.Context) {
 	wsID, err := uuid.Parse(c.Param("ws_id"))
 	if err != nil {
@@ -64,7 +84,16 @@ func (h *CollectionHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": toCollectionListDTO(cols)})
 }
 
-// GetByID handles GET /api/v1/collections/:id
+// @Summary		Get collection by ID
+// @Description	Get a collection by ID
+// @Tags			collections
+// @Produce		json
+// @Param			id	path		string	true	"Collection ID"	format(uuid)
+// @Success		200	{object}	map[string]interface{}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/collections/:id [get]
+// @Security		BearerAuth
 func (h *CollectionHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -81,7 +110,18 @@ func (h *CollectionHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, toCollectionDTO(col))
 }
 
-// Update handles PATCH /api/v1/collections/:id
+// @Summary		Update collection
+// @Description	Update collection information
+// @Tags			collections
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string	true	"Collection ID"	format(uuid)
+// @Param			body	body		object	true	"Collection updates"
+// @Success		200		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		404		{object}	map[string]interface{}
+// @Router			/api/v1/collections/:id [patch]
+// @Security		BearerAuth
 func (h *CollectionHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -104,7 +144,17 @@ func (h *CollectionHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, toCollectionDTO(col))
 }
 
-// Delete handles DELETE /api/v1/collections/:id
+// @Summary		Delete collection
+// @Description	Delete a collection by ID (admin only)
+// @Tags			collections
+// @Produce		json
+// @Param			id	path		string	true	"Collection ID"	format(uuid)
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		404	{object}	map[string]interface{}
+// @Router			/api/v1/collections/:id [delete]
+// @Security		BearerAuth
+// @Security		AdminRole
 func (h *CollectionHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -122,14 +172,14 @@ func (h *CollectionHandler) Delete(c *gin.Context) {
 
 func toCollectionDTO(col *entity.Collection) gin.H {
 	return gin.H{
-		"id":           col.ID.String(),
-		"name":         col.Name,
-		"description":  col.Description,
-		"slug":         col.Slug,
-		"workspace_id": col.WorkspaceID.String(),
+		"id":             col.ID.String(),
+		"name":           col.Name,
+		"description":    col.Description,
+		"slug":           col.Slug,
+		"workspace_id":   col.WorkspaceID.String(),
 		"endpoint_count": len(col.Endpoints),
-		"created_at":   col.CreatedAt,
-		"updated_at":   col.UpdatedAt,
+		"created_at":     col.CreatedAt,
+		"updated_at":     col.UpdatedAt,
 	}
 }
 
@@ -137,12 +187,12 @@ func toCollectionListDTO(cols []*entity.Collection) []gin.H {
 	result := make([]gin.H, len(cols))
 	for i, col := range cols {
 		result[i] = gin.H{
-			"id":           col.ID.String(),
-			"name":         col.Name,
-			"slug":         col.Slug,
-			"workspace_id": col.WorkspaceID.String(),
+			"id":             col.ID.String(),
+			"name":           col.Name,
+			"slug":           col.Slug,
+			"workspace_id":   col.WorkspaceID.String(),
 			"endpoint_count": len(col.Endpoints),
-			"created_at":   col.CreatedAt,
+			"created_at":     col.CreatedAt,
 		}
 	}
 	return result
