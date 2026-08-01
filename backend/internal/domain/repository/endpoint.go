@@ -36,4 +36,7 @@ type EndpointRepository interface {
 
 	// CountByWorkspace returns the number of endpoints in a workspace.
 	CountByWorkspace(ctx context.Context, workspaceID uuid.UUID) (int, error)
+
+	// ListAllActive returns all active endpoints across all workspaces.
+	ListAllActive(ctx context.Context) ([]*entity.Endpoint, error)
 }

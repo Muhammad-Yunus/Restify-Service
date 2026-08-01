@@ -154,5 +154,16 @@ func (r *EndpointRepositoryImpl) CountByWorkspace(ctx context.Context, workspace
 	return int(count), nil
 }
 
+func (r *EndpointRepositoryImpl) ListAllActive(ctx context.Context) ([]*entity.Endpoint, error) {
+	var eps []*entity.Endpoint
+	if err := r.db.WithContext(ctx).
+		Where("is_active = ?", true).
+		Order("created_at ASC").
+		Find(&eps).Error; err != nil {
+		return nil, fmt.Errorf("list all active endpoints: %w", err)
+	}
+	return eps, nil
+}
+
 // Compile-time check.
 var _ repository.EndpointRepository = (*EndpointRepositoryImpl)(nil)

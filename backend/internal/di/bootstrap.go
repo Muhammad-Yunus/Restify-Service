@@ -15,6 +15,7 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/baas"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
+	wshub "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/websocket"
 )
 
 // Container holds all application dependencies.
@@ -68,6 +69,8 @@ type Container struct {
 	WorkerPool        *service.WorkerPool
 	MQTTService       *service.MQTTService
 	EventBus          *service.EventBus
+	WSBus             *service.WSBus
+	WSHandler         *handler.WebSocketHandler
 
 	closer []func(context.Context) error
 }
@@ -174,6 +177,11 @@ func (c *Container) wireServices() error {
 	c.MQTTService = service.NewMQTTService(c.MQTT)
 	c.EventBus = service.NewEventBus(c.MQTT)
 
+	// Initialize WebSocket hub
+	wsHub := wshub.NewHub()
+	c.WSBus = service.NewWSBus(wsHub)
+	c.WSHandler = handler.NewWebSocketHandler(wsHub)
+
 	// Initialize auth middleware and rate limiter
 	jwtExpiration, _ := time.ParseDuration(c.Config.JWT.Expiration)
 	jwtSvc := auth.NewJWTService(c.Config.JWT.Secret, jwtExpiration)
@@ -194,6 +202,7 @@ func (c *Container) wireServices() error {
 	c.AlertHandler = handler.NewAlertHandler(c.AlertService)
 	c.BaasRouteRegistry = baas.NewRouteRegistry(c.RESTGenerator, c.EndpointRepo, c.Logger)
 	c.LiveHandler = handler.NewLiveHandler(c.BaasRouteRegistry)
+	c.WSHandler = handler.NewWebSocketHandler(wshub.NewHub())
 
 	c.Router = initRouter(c.Config.Server.Env, c.RateLimiter, c)
 

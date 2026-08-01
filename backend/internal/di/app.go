@@ -46,6 +46,10 @@ func (a *App) Run(ctx context.Context) error {
 
 	a.container.Logger.Info(ctx, "starting server", "addr", addr)
 
+	if a.container.WSBus != nil {
+		a.container.WSBus.Start(ctx)
+	}
+
 	if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("listen and serve: %w", err)
 	}

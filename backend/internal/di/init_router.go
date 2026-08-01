@@ -1,6 +1,7 @@
 package di
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/router"
@@ -25,6 +26,9 @@ func initRouter(env string, rateLimit *middleware.RateLimitMiddleware, deps *Con
 	}
 
 	router.RegisterAll(ginRouter.Engine(), handlerDeps, rateLimit, deps.LogRepo, deps.Logger)
+
+	// Register WebSocket endpoint (public)
+	ginRouter.Engine().GET("/ws", deps.WSHandler.Handle)
 
 	// Set up dynamic BaaS routing
 	if deps.BaasRouteRegistry != nil {
