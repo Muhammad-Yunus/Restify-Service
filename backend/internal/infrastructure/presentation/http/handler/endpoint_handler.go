@@ -34,6 +34,12 @@ func (h *EndpointHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.ProblemDetail(http.StatusBadRequest, "Invalid request body", err.Error()))
 		return
 	}
+
+	if _, ok := params["name"].(string); !ok {
+		c.JSON(http.StatusBadRequest, dto.ProblemDetail(http.StatusBadRequest, "Missing required field", "name is required"))
+		return
+	}
+
 	params["collection_id"] = colID
 
 	ep, err := h.endpointService.Create(c.Request.Context(), colID, params)

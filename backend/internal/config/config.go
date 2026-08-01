@@ -23,6 +23,7 @@ type Config struct {
 	Logging  LoggingConfig
 	OTEL     OTELConfig
 	JWT      JWTConfig
+	RateLimit RateLimitConfig
 }
 
 // ServerConfig holds HTTP server settings.
@@ -78,6 +79,19 @@ type JWTConfig struct {
 	Expiration string
 }
 
+// RateLimitConfig holds rate limiting settings.
+type RateLimitConfig struct {
+	RequestsPerMinute int `koanf:"requests_per_minute"`
+}
+
+func (r *RateLimitConfig) Unmarshal(k *koanf.Koanf) error {
+	v := k.Int("rate.limit.requests_per_minute")
+	if v > 0 {
+		r.RequestsPerMinute = v
+	}
+	return nil
+}
+
 // Load reads configuration from a .env file (optional) and environment
 // variables, with environment variables taking precedence.
 func Load(configPath string) (*Config, error) {
@@ -100,6 +114,13 @@ func Load(configPath string) (*Config, error) {
 	cfg := &Config{}
 	if err := k.Unmarshal("", cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
+	}
+
+	// Rate limit: manually parse from koanf to handle nested key mapping
+	if cfg.RateLimit.RequestsPerMinute == 0 {
+		if v := k.Int("rate.limit.requests.per.minute"); v > 0 {
+			cfg.RateLimit.RequestsPerMinute = v
+		}
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -131,6 +152,10 @@ func (c *Config) Validate() error {
 
 	if c.JWT.Secret == "" {
 		errs = append(errs, errors.New("jwt.secret is required"))
+	}
+
+	if c.RateLimit.RequestsPerMinute <= 0 {
+		errs = append(errs, errors.New("rate_limit.requests_per_minute must be greater than 0"))
 	}
 
 	if len(errs) == 0 {

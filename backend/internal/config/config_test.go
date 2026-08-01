@@ -24,6 +24,7 @@ FORGEBASE_OTEL_ENABLED=true
 FORGEBASE_OTEL_ENDPOINT=http://localhost:4317
 FORGEBASE_JWT_SECRET=test-secret
 FORGEBASE_JWT_EXPIRATION=1h
+FORGEBASE_RATE_LIMIT_REQUESTS_PER_MINUTE=60
 `
 
 func writeEnvFile(t *testing.T) string {
@@ -90,6 +91,10 @@ func TestLoadFromEnvFile(t *testing.T) {
 	if cfg.JWT.Secret != "test-secret" || cfg.JWT.Expiration != "1h" {
 		t.Errorf("JWT = %+v", cfg.JWT)
 	}
+
+	if cfg.RateLimit.RequestsPerMinute != 60 {
+		t.Errorf("RateLimit.RequestsPerMinute = %d, want 60", cfg.RateLimit.RequestsPerMinute)
+	}
 }
 
 func TestLoadFromEnvironment(t *testing.T) {
@@ -98,6 +103,7 @@ func TestLoadFromEnvironment(t *testing.T) {
 	t.Setenv("FORGEBASE_SERVER_ENV", "production")
 	t.Setenv("FORGEBASE_DATABASE_URL", "postgres://env:env@localhost:5432/db")
 	t.Setenv("FORGEBASE_JWT_SECRET", "env-secret")
+	t.Setenv("FORGEBASE_RATE_LIMIT_REQUESTS_PER_MINUTE", "120")
 
 	cfg, err := Load(filepath.Join(t.TempDir(), ".env"))
 	if err != nil {
@@ -118,6 +124,10 @@ func TestLoadFromEnvironment(t *testing.T) {
 
 	if cfg.JWT.Secret != "env-secret" {
 		t.Errorf("JWT.Secret = %q, want env-secret", cfg.JWT.Secret)
+	}
+
+	if cfg.RateLimit.RequestsPerMinute != 120 {
+		t.Errorf("RateLimit.RequestsPerMinute = %d, want 120", cfg.RateLimit.RequestsPerMinute)
 	}
 }
 

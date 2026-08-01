@@ -3,12 +3,18 @@ package di
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
+	"github.com/muhammadyunus/Restify-Service/internal/application/service"
 	"github.com/muhammadyunus/Restify-Service/internal/config"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
-	"github.com/muhammadyunus/Restify-Service/internal/domain/service"
+	domservice "github.com/muhammadyunus/Restify-Service/internal/domain/service"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/auth"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/baas"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
+	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 )
 
 // Container holds all application dependencies.
@@ -22,25 +28,37 @@ type Container struct {
 	Queue  repository.MessageQueue
 	MQTT   repository.MQTTBroker
 
-	Router repository.HTTPRouter
+	Router          repository.HTTPRouter
+	RateLimiter     *middleware.RateLimitMiddleware
+	AuthMiddleware  *middleware.AuthMiddleware
 
-	AuthService       service.AuthService
-	UserService       service.UserService
-	WorkspaceService  service.WorkspaceService
-	TeamService       service.TeamService
-	CollectionService service.CollectionService
-	EndpointService   service.EndpointService
+	AuthHandler       *handler.AuthHandler
+	UserHandler       *handler.UserHandler
+	WorkspaceHandler  *handler.WorkspaceHandler
+	TeamHandler       *handler.TeamHandler
+	CollectionHandler *handler.CollectionHandler
+	EndpointHandler   *handler.EndpointHandler
+	IntrospectHandler *handler.IntrospectHandler
+
+	AuthService       domservice.AuthService
+	UserService       domservice.UserService
+	WorkspaceService  domservice.WorkspaceService
+	TeamService       domservice.TeamService
+	CollectionService domservice.CollectionService
+	EndpointService   domservice.EndpointService
 
 	LogRepo       repository.APILogRepository
 	AnalyticsRepo repository.AnalyticsRepository
 	AlertRepo     repository.AlertRepository
 
-	APIIntrospector  service.APIIntrospector
-	RESTGenerator    service.RESTGenerator
-	AnalyticsService service.AnalyticsService
-	AlertService     service.AlertService
-	EmailService     service.EmailService
-	SchedulerService service.SchedulerService
+	APIIntrospector  domservice.APIIntrospector
+	RESTGenerator    domservice.RESTGenerator
+	AnalyticsService domservice.AnalyticsService
+	AlertService     domservice.AlertService
+	EmailService     domservice.EmailService
+	SchedulerService domservice.SchedulerService
+
+	IntrospectService *service.IntrospectorService
 
 	closer []func(context.Context) error
 }
@@ -107,21 +125,38 @@ func (c *Container) wireServices() error {
 		return fmt.Errorf("init alert repo: %w", err)
 	}
 
-	c.AuthService = service.NewAuthService(c.DB, c.Cache)
-	c.UserService = service.NewUserService(c.GORM, c.Logger)
-  c.WorkspaceService = service.NewWorkspaceService(c.GORM, c.Logger)
-	c.TeamService = service.NewTeamService(c.DB, c.Logger)
-	c.CollectionService = service.NewCollectionService(c.DB, c.Logger)
-	c.EndpointService = service.NewEndpointService(c.DB, c.Logger)
+	c.AuthService = domservice.NewAuthService(c.DB, c.Cache)
+	c.UserService = domservice.NewUserService(nil, c.Logger)
+  c.WorkspaceService = domservice.NewWorkspaceService(nil, c.Logger)
+	c.TeamService = domservice.NewTeamService(c.DB, c.Logger)
+	c.CollectionService = domservice.NewCollectionService(c.DB, c.Logger)
+	c.EndpointService = domservice.NewEndpointService(c.DB, c.Logger)
 
-	c.APIIntrospector = service.NewPostgreSQLIntrospector(c.DB)
-	c.RESTGenerator = service.NewRESTGenerator(c.APIIntrospector, c.Logger)
-	c.EmailService = service.NewEmailService(c.Logger)
-	c.AnalyticsService = service.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
-	c.AlertService = service.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger)
-	c.SchedulerService = service.NewSchedulerService(c.Logger)
+	c.APIIntrospector = baas.NewPostgreSQLIntrospector(c.DB)
+	c.RESTGenerator = domservice.NewRESTGenerator(c.APIIntrospector, c.Logger)
+	c.EmailService = domservice.NewEmailService(c.Logger)
+	c.AnalyticsService = domservice.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
+	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger)
+	c.SchedulerService = domservice.NewSchedulerService(c.Logger)
+	c.IntrospectService = service.NewIntrospectorService(c.APIIntrospector)
 
-	c.Router = initRouter(c.Config.Server.Env)
+	// Initialize auth middleware and rate limiter
+	jwtExpiration, _ := time.ParseDuration(c.Config.JWT.Expiration)
+	jwtSvc := auth.NewJWTService(c.Config.JWT.Secret, jwtExpiration)
+	blacklist := auth.NewTokenBlacklist(c.Cache)
+	c.RateLimiter = middleware.NewRateLimitMiddleware(c.Config.RateLimit.RequestsPerMinute)
+	c.AuthMiddleware = middleware.NewAuthMiddleware(jwtSvc, blacklist)
+
+	// Initialize HTTP handlers
+	c.AuthHandler = handler.NewAuthHandler(c.AuthService, jwtSvc)
+	c.UserHandler = handler.NewUserHandler(c.UserService)
+	c.WorkspaceHandler = handler.NewWorkspaceHandler(c.WorkspaceService)
+	c.TeamHandler = handler.NewTeamHandler(c.TeamService)
+	c.CollectionHandler = handler.NewCollectionHandler(c.CollectionService)
+	c.EndpointHandler = handler.NewEndpointHandler(c.EndpointService)
+	c.IntrospectHandler = handler.NewIntrospectHandler(c.IntrospectService)
+
+	c.Router = initRouter(c.Config.Server.Env, c.RateLimiter, c)
 
 	return nil
 }

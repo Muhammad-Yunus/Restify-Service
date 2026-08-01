@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,12 +24,18 @@ type fakeEndpointService struct {
 }
 
 func (f *fakeEndpointService) Create(_ context.Context, collectionID uuid.UUID, params map[string]any) (*entity.Endpoint, error) {
+	name, _ := params["name"].(string)
+	if name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+	path, _ := params["path"].(string)
+	method, _ := params["method"].(string)
 	ep := &entity.Endpoint{
 		ID:           uuid.New(),
 		CollectionID: collectionID,
-		Name:         params["name"].(string),
-		Path:         params["path"].(string),
-		Method:       params["method"].(string),
+		Name:         name,
+		Path:         path,
+		Method:       method,
 		Version:      "v1",
 		IsActive:     true,
 	}
@@ -125,8 +132,8 @@ func newTestEndpoint(collectionID uuid.UUID) *entity.Endpoint {
 		Path:         "/test",
 		Method:       "GET",
 		Version:      "v1",
-		IsActive:     true,
-		EndpointType: entity.EndpointTypeTable,
+		IsActive:        true,
+		DBType:          entity.EndpointTypeTable,
 		Schema:       "public",
 		TableName:    "test_table",
 		CreatedAt:    time.Now(),
@@ -156,7 +163,7 @@ func TestCreateEndpointReturns400OnMissingName(t *testing.T) {
 	collectionID := uuid.New()
 	rec := performEndpointRequest(r, http.MethodPost, "/collections/"+collectionID.String()+"/endpoints", map[string]any{"path": "/test"})
 	if rec.Code != http.StatusBadRequest {
-		t.Errorf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+		t.Errorf("status = %d, want %d, body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
 	}
 }
 

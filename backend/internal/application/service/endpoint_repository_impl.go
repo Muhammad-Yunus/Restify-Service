@@ -22,7 +22,7 @@ func (r *endpointRepositoryImpl) Create(ctx context.Context, ep *entity.Endpoint
 		ep.ID = uuid.New()
 	}
 	if ep.Version == "" {
-	(ep.Version = "v1"
+		ep.Version = "v1"
 	}
 	if ep.Method == "" {
 		ep.Method = "GET"
