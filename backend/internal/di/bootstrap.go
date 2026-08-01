@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/muhammadyunus/Restify-Service/internal/config"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
@@ -17,6 +18,7 @@ type Container struct {
 
 	Logger repository.Logger
 	DB     repository.DB
+	GORM   *gorm.DB
 	Cache  repository.Cache
 	Queue  repository.MessageQueue
 	MQTT   repository.MQTTBroker
@@ -55,7 +57,7 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 		return nil, fmt.Errorf("init logger: %w", err)
 	}
 
-	c.DB, err = initDatabase(cfg.Database)
+	c.DB, c.GORM, err = initDatabase(ctx, cfg.Database)
 	if err != nil {
 		return nil, fmt.Errorf("init database: %w", err)
 	}
@@ -83,19 +85,30 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 
 	c.registerClose(c.MQTT.Close)
 
+	if err := c.wireServices(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+// wireServices wires repositories, services, and the HTTP router.
+func (c *Container) wireServices() error {
+	var err error
+
 	c.LogRepo, err = initLogRepo()
 	if err != nil {
-		return nil, fmt.Errorf("init log repo: %w", err)
+		return fmt.Errorf("init log repo: %w", err)
 	}
 
 	c.AnalyticsRepo, err = initAnalyticsRepo()
 	if err != nil {
-		return nil, fmt.Errorf("init analytics repo: %w", err)
+		return fmt.Errorf("init analytics repo: %w", err)
 	}
 
 	c.AlertRepo, err = initAlertRepo()
 	if err != nil {
-		return nil, fmt.Errorf("init alert repo: %w", err)
+		return fmt.Errorf("init alert repo: %w", err)
 	}
 
 	c.AuthService = service.NewAuthService(c.DB, c.Cache)
@@ -112,9 +125,9 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 	c.AlertService = service.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger)
 	c.SchedulerService = service.NewSchedulerService(c.Logger)
 
-	c.Router = initRouter(cfg.Server.Env)
+	c.Router = initRouter(c.Config.Server.Env)
 
-	return c, nil
+	return nil
 }
 
 func (c *Container) registerClose(fn func(context.Context) error) {

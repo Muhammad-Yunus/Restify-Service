@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS idx_jwt_blacklist_expires_at;
+DROP TABLE IF EXISTS jwt_blacklist;

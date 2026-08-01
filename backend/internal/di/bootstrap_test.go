@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/muhammadyunus/Restify-Service/internal/config"
+	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 )
 
 func testConfig() *config.Config {
@@ -23,15 +24,58 @@ func testConfig() *config.Config {
 	}
 }
 
-func TestBootstrap(t *testing.T) {
-	container, err := Bootstrap(context.Background(), testConfig())
+// dbStub satisfies repository.DB without a live database.
+type dbStub struct{}
+
+func (s *dbStub) BeginTransaction(ctx context.Context) (repository.Transaction, error) {
+	return nil, nil
+}
+
+func (s *dbStub) WithTransaction(ctx context.Context, fn func(tx repository.Transaction) error) error {
+	return nil
+}
+
+func (s *dbStub) Raw(ctx context.Context, query string, dest any, args ...any) error {
+	return nil
+}
+
+func (s *dbStub) Query(ctx context.Context, query string, args ...any) ([]map[string]any, error) {
+	return nil, nil
+}
+
+func (s *dbStub) Close(ctx context.Context) error {
+	return nil
+}
+
+// testContainer builds a fully wired Container with stubbed infrastructure,
+// avoiding the need for a live database.
+func testContainer(t *testing.T) *Container {
+	t.Helper()
+
+	cfg := testConfig()
+	c := &Container{Config: cfg}
+
+	logger, err := initLogger(cfg.Logging)
 	if err != nil {
-		t.Fatalf("Bootstrap: %v", err)
+		t.Fatalf("init logger: %v", err)
 	}
 
-	if container == nil {
-		t.Fatal("container is nil")
+	c.Logger = logger
+
+	c.DB = &dbStub{}
+	c.Cache = &cacheStub{}
+	c.Queue = &queueStub{}
+	c.MQTT = &mqttStub{}
+
+	if err := c.wireServices(); err != nil {
+		t.Fatalf("wire services: %v", err)
 	}
+
+	return c
+}
+
+func TestBootstrap(t *testing.T) {
+	container := testContainer(t)
 
 	if container.Router == nil {
 		t.Error("router is nil")
@@ -43,10 +87,6 @@ func TestBootstrap(t *testing.T) {
 
 	if container.DB == nil || container.Cache == nil || container.Queue == nil || container.MQTT == nil {
 		t.Error("infrastructure dependency is nil")
-	}
-
-	if len(container.closer) == 0 {
-		t.Error("no closers registered")
 	}
 }
 
@@ -93,10 +133,7 @@ func TestCloseReverseOrder(t *testing.T) {
 }
 
 func TestHealthEndpoint(t *testing.T) {
-	container, err := Bootstrap(context.Background(), testConfig())
-	if err != nil {
-		t.Fatalf("Bootstrap: %v", err)
-	}
+	container := testContainer(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
