@@ -121,8 +121,8 @@ func initLogRepo() (repository.APILogRepository, error) {
 	return &logRepoStub{}, nil
 }
 
-func initAnalyticsRepo() (repository.AnalyticsRepository, error) {
-	return &analyticsRepoStub{}, nil
+func initAnalyticsRepo(db repository.DB, gormDB *gorm.DB) (repository.AnalyticsRepository, error) {
+	return apprepo.NewAnalyticsRepository(db, gormDB), nil
 }
 
 func initAlertRepo() (repository.AlertRepository, error) {

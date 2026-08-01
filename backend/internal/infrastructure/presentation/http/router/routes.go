@@ -18,6 +18,8 @@ type HandlerDeps struct {
 	CollectionHandler *httpHandler.CollectionHandler
 	EndpointHandler   *httpHandler.EndpointHandler
 	IntrospectHandler *httpHandler.IntrospectHandler
+	LiveHandler       *httpHandler.LiveHandler
+	AnalyticsHandler  *httpHandler.AnalyticsHandler
 	AuthMW            *middleware.AuthMiddleware
 }
 
@@ -104,5 +106,16 @@ func RegisterAll(r *gin.Engine, deps *HandlerDeps, rateLimiter *middleware.RateL
 		introGroup.GET("/schemas/:schema/functions", deps.IntrospectHandler.DiscoverFunctions)
 		introGroup.GET("/schemas/:schema/functions/:name", deps.IntrospectHandler.GetFunctionSignature)
 		introGroup.GET("/schemas/:schema/procedures", deps.IntrospectHandler.DiscoverProcedures)
+	}
+
+	// Live BaaS endpoint introspection (authenticated)
+	r.GET("/api/v1/admin/endpoints", deps.LiveHandler.ListRegistered, deps.AuthMW.RequireAuth())
+
+	// Analytics routes (authenticated)
+	analyticsGroup := r.Group("/api/v1/analytics", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		analyticsGroup.GET("/overview/:workspace_id", deps.AnalyticsHandler.Overview)
+		analyticsGroup.GET("/endpoints/:endpoint_id/metrics", deps.AnalyticsHandler.EndpointMetrics)
+		analyticsGroup.GET("/logs", deps.AnalyticsHandler.SearchLogs)
 	}
 }

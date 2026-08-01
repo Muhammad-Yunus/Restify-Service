@@ -39,6 +39,9 @@ type Container struct {
 	CollectionHandler *handler.CollectionHandler
 	EndpointHandler   *handler.EndpointHandler
 	IntrospectHandler *handler.IntrospectHandler
+	LiveHandler       *handler.LiveHandler
+	AnalyticsHandler  *handler.AnalyticsHandler
+	BaasRouteRegistry *baas.RouteRegistry
 
 	AuthService       domservice.AuthService
 	UserService       domservice.UserService
@@ -50,6 +53,7 @@ type Container struct {
 	LogRepo       repository.APILogRepository
 	AnalyticsRepo repository.AnalyticsRepository
 	AlertRepo     repository.AlertRepository
+	EndpointRepo  *service.ServiceEndpointRepo
 
 	APIIntrospector  domservice.APIIntrospector
 	RESTGenerator    domservice.RESTGenerator
@@ -96,7 +100,6 @@ func Bootstrap(ctx context.Context, cfg *config.Config) (*Container, error) {
 	if err != nil {
 		return nil, fmt.Errorf("init mqtt: %w", err)
 	}
-
 	c.registerClose(c.MQTT.Close)
 
 	if err := c.wireServices(); err != nil {
@@ -115,7 +118,7 @@ func (c *Container) wireServices() error {
 		return fmt.Errorf("init log repo: %w", err)
 	}
 
-	c.AnalyticsRepo, err = initAnalyticsRepo()
+	c.AnalyticsRepo, err = initAnalyticsRepo(c.DB, c.GORM)
 	if err != nil {
 		return fmt.Errorf("init analytics repo: %w", err)
 	}
@@ -127,13 +130,14 @@ func (c *Container) wireServices() error {
 
 	c.AuthService = domservice.NewAuthService(c.DB, c.Cache)
 	c.UserService = domservice.NewUserService(nil, c.Logger)
-  c.WorkspaceService = domservice.NewWorkspaceService(nil, c.Logger)
+	c.WorkspaceService = domservice.NewWorkspaceService(nil, c.Logger)
 	c.TeamService = domservice.NewTeamService(c.DB, c.Logger)
 	c.CollectionService = domservice.NewCollectionService(c.DB, c.Logger)
-	c.EndpointService = domservice.NewEndpointService(c.DB, c.Logger)
 
+	c.EndpointRepo = &service.ServiceEndpointRepo{DB: c.GORM}
+	c.EndpointService = service.NewEndpointService(c.GORM, c.Logger)
 	c.APIIntrospector = baas.NewPostgreSQLIntrospector(c.DB)
-	c.RESTGenerator = domservice.NewRESTGenerator(c.APIIntrospector, c.Logger)
+	c.RESTGenerator = baas.NewRESTGenerator(c.APIIntrospector, c.Logger)
 	c.EmailService = domservice.NewEmailService(c.Logger)
 	c.AnalyticsService = domservice.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
 	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger)
@@ -155,6 +159,10 @@ func (c *Container) wireServices() error {
 	c.CollectionHandler = handler.NewCollectionHandler(c.CollectionService)
 	c.EndpointHandler = handler.NewEndpointHandler(c.EndpointService)
 	c.IntrospectHandler = handler.NewIntrospectHandler(c.IntrospectService)
+	c.AnalyticsHandler = handler.NewAnalyticsHandler(c.AnalyticsService, c.LogRepo)
+
+	c.BaasRouteRegistry = baas.NewRouteRegistry(c.RESTGenerator, c.EndpointRepo, c.Logger)
+	c.LiveHandler = handler.NewLiveHandler(c.BaasRouteRegistry)
 
 	c.Router = initRouter(c.Config.Server.Env, c.RateLimiter, c)
 

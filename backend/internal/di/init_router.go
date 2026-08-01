@@ -6,7 +6,7 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/router"
 )
 
-// initRouter sets up the Gin HTTP router with routes and middleware.
+// initRouter sets up the Gin HTTP router with routes, middleware, and dynamic BaaS routing.
 func initRouter(env string, rateLimit *middleware.RateLimitMiddleware, deps *Container) repository.HTTPRouter {
 	ginRouter := router.NewGinRouter(env)
 
@@ -19,10 +19,18 @@ func initRouter(env string, rateLimit *middleware.RateLimitMiddleware, deps *Con
 		CollectionHandler: deps.CollectionHandler,
 		EndpointHandler:   deps.EndpointHandler,
 		IntrospectHandler: deps.IntrospectHandler,
+		LiveHandler:       deps.LiveHandler,
+		AnalyticsHandler:  deps.AnalyticsHandler,
 		AuthMW:            deps.AuthMiddleware,
 	}
 
 	router.RegisterAll(ginRouter.Engine(), handlerDeps, rateLimit, deps.LogRepo, deps.Logger)
+
+	// Set up dynamic BaaS routing
+	if deps.BaasRouteRegistry != nil {
+		dynRouter := router.NewDynamicRouter(deps.BaasRouteRegistry)
+		dynRouter.RegisterDynamicRoutes(ginRouter.Engine())
+	}
 
 	return ginRouter
 }
