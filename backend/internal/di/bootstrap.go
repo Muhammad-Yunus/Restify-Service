@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/muhammadyunus/Restify-Service/internal/application/service"
+	"github.com/muhammadyunus/Restify-Service/internal/application/service/jobs"
 	"github.com/muhammadyunus/Restify-Service/internal/config"
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 	domservice "github.com/muhammadyunus/Restify-Service/internal/domain/service"
@@ -15,7 +16,7 @@ import (
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/baas"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
-	wshub "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/websocket"
+	wah "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/websocket"
 )
 
 // Container holds all application dependencies.
@@ -63,6 +64,11 @@ type Container struct {
 	AlertService     domservice.AlertService
 	EmailService     domservice.EmailService
 	SchedulerService domservice.SchedulerService
+
+	CacheService     *service.CacheService
+	CachedWorkspace  *service.CachedWorkspaceService
+	CachedUser       *service.CachedUserService
+	CachedEndpoint   *service.CachedEndpointService
 
 	IntrospectService *service.IntrospectorService
 	QueueService      *service.QueueService
@@ -166,8 +172,14 @@ func (c *Container) wireServices() error {
 	c.EmailService = domservice.NewEmailService(c.Logger)
 	c.AnalyticsService = domservice.NewAnalyticsService(c.LogRepo, c.AnalyticsRepo, c.Logger)
 	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger, c.MQTT)
-	c.SchedulerService = domservice.NewSchedulerService(c.Logger)
+	c.SchedulerService = service.NewSchedulerService(c.Logger)
 	c.IntrospectService = service.NewIntrospectorService(c.APIIntrospector)
+
+	// Initialize cache service and cached decorators
+	c.CacheService = service.NewCacheService(c.Cache)
+	c.CachedWorkspace = service.NewCachedWorkspaceService(c.WorkspaceService, c.CacheService)
+	c.CachedUser = service.NewCachedUserService(c.UserService, c.CacheService)
+	c.CachedEndpoint = service.NewCachedEndpointService(c.EndpointService.(domservice.EndpointService), c.CacheService)
 
 	// Initialize message queue service and worker pool
 	c.QueueService = service.NewQueueService(c.Queue)
@@ -178,9 +190,20 @@ func (c *Container) wireServices() error {
 	c.EventBus = service.NewEventBus(c.MQTT)
 
 	// Initialize WebSocket hub
-	wsHub := wshub.NewHub()
+	wsHub := wah.NewHub()
 	c.WSBus = service.NewWSBus(wsHub)
 	c.WSHandler = handler.NewWebSocketHandler(wsHub)
+
+	// Register scheduled background jobs
+	cleanupJob := jobs.NewCleanupJob(c.LogRepo, c.Cache, c.Logger)
+	if err := c.SchedulerService.RegisterCron("log_cleanup", "0 2 * * *", cleanupJob.Run); err != nil {
+		return fmt.Errorf("register cleanup job: %w", err)
+	}
+
+	aggregationJob := jobs.NewAggregationJob(c.AnalyticsRepo, c.LogRepo, c.Logger)
+	if err := c.SchedulerService.RegisterCron("metric_aggregation", "0 * * * *", aggregationJob.Run); err != nil {
+		return fmt.Errorf("register aggregation job: %w", err)
+	}
 
 	// Initialize auth middleware and rate limiter
 	jwtExpiration, _ := time.ParseDuration(c.Config.JWT.Expiration)
@@ -202,7 +225,7 @@ func (c *Container) wireServices() error {
 	c.AlertHandler = handler.NewAlertHandler(c.AlertService)
 	c.BaasRouteRegistry = baas.NewRouteRegistry(c.RESTGenerator, c.EndpointRepo, c.Logger)
 	c.LiveHandler = handler.NewLiveHandler(c.BaasRouteRegistry)
-	c.WSHandler = handler.NewWebSocketHandler(wshub.NewHub())
+	c.WSHandler = handler.NewWebSocketHandler(wah.NewHub())
 
 	c.Router = initRouter(c.Config.Server.Env, c.RateLimiter, c)
 

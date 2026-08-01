@@ -314,21 +314,4 @@ func (s *emailServiceStub) SendWelcomeEmail(ctx context.Context, recipient, name
 	return errStubNotImplemented
 }
 
-type schedulerServiceStub struct{}
 
-// NewSchedulerService constructs the scheduler service.
-func NewSchedulerService(logger repository.Logger) SchedulerService {
-	return &schedulerServiceStub{}
-}
-
-func (s *schedulerServiceStub) Start(ctx context.Context) error {
-	return errStubNotImplemented
-}
-
-func (s *schedulerServiceStub) Stop(ctx context.Context) error {
-	return errStubNotImplemented
-}
-
-func (s *schedulerServiceStub) RegisterCron(name string, cronExpr string, job func(context.Context) error) error {
-	return errStubNotImplemented
-}
