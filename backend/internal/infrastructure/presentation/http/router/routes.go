@@ -5,83 +5,104 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
+	httpHandler "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
 )
 
-// RegisterUserRoutes registers user-related routes.
-func RegisterUserRoutes(r *gin.Engine, userHandler *handler.UserHandler, authMW *middleware.AuthMiddleware) {
-	users := r.Group("/api/v1/users")
-	{
-		users.GET("", userHandler.List)
-		users.GET("/:id", authMW.RequireAuth(), userHandler.GetByID)
-		users.PATCH("/:id", authMW.RequireAuth(), userHandler.Update)
-		users.DELETE("/:id", authMW.RequireRole("administrator"), userHandler.Delete)
-	}
+// HandlerDeps holds all HTTP handlers.
+type HandlerDeps struct {
+	AuthHandler       *httpHandler.AuthHandler
+	UserHandler       *httpHandler.UserHandler
+	WorkspaceHandler  *httpHandler.WorkspaceHandler
+	TeamHandler       *httpHandler.TeamHandler
+	CollectionHandler *httpHandler.CollectionHandler
+	EndpointHandler   *httpHandler.EndpointHandler
+	IntrospectHandler *httpHandler.IntrospectHandler
+	AuthMW            *middleware.AuthMiddleware
 }
 
-// RegisterWorkspaceRoutes registers workspace-related routes.
-func RegisterWorkspaceRoutes(r *gin.Engine, wsHandler *handler.WorkspaceHandler, authMW *middleware.AuthMiddleware) {
-	workspaces := r.Group("/api/v1/workspaces")
-	{
-		workspaces.GET("", authMW.RequireAuth(), wsHandler.List)
-		workspaces.POST("", authMW.RequireAuth(), wsHandler.Create)
-		workspaces.GET("/:id", authMW.RequireAuth(), wsHandler.GetByID)
-		workspaces.PATCH("/:id", authMW.RequireAuth(), wsHandler.Update)
-		workspaces.DELETE("/:id", authMW.RequireRole("administrator"), wsHandler.Delete)
-	}
+// routerDeps holds dependencies needed for route registration.
+type routerDeps struct {
+	logRepo interface{ Create(context interface{}, entry interface{}) error }
+	logger  interface{ Error(ctx interface{}, msg string, v ...interface{}) }
 }
 
-// RegisterTeamRoutes registers team-related routes.
-func RegisterTeamRoutes(r *gin.Engine, teamHandler *handler.TeamHandler, authMW *middleware.AuthMiddleware) {
-	teams := r.Group("/api/v1/teams")
-	{
-		teams.GET("/:id", authMW.RequireAuth(), teamHandler.GetByID)
-		teams.POST("/:id/members", authMW.RequireAuth(), teamHandler.AddMember)
-		teams.GET("/:id/members", authMW.RequireAuth(), teamHandler.ListMembers)
-		teams.DELETE("/:id/members/:user_id", authMW.RequireAuth(), teamHandler.RemoveMember)
-	}
-}
+// RegisterAll registers all API routes with versioning.
+func RegisterAll(r *gin.Engine, deps *HandlerDeps, rateLimiter *middleware.RateLimitMiddleware, logRepo interface{}, logger interface{}) {
 
-// RegisterCollectionRoutes registers collection-related routes.
-func RegisterCollectionRoutes(r *gin.Engine, colHandler *handler.CollectionHandler, authMW *middleware.AuthMiddleware) {
-	collections := r.Group("/api/v1/collections")
-	{
-		collections.GET("", authMW.RequireAuth(), colHandler.List)
-		collections.POST("", authMW.RequireAuth(), colHandler.Create)
-		collections.GET("/:id", authMW.RequireAuth(), colHandler.GetByID)
-		collections.PATCH("/:id", authMW.RequireAuth(), colHandler.Update)
-		collections.DELETE("/:id", authMW.RequireRole("administrator"), colHandler.Delete)
-	}
-}
-
-// RegisterEndpointRoutes registers endpoint-related routes.
-func RegisterEndpointRoutes(r *gin.Engine, epHandler *handler.EndpointHandler, authMW *middleware.AuthMiddleware) {
-	endpoints := r.Group("/api/v1/endpoints")
-	{
-		endpoints.GET("", authMW.RequireAuth(), epHandler.List)
-		endpoints.POST("", authMW.RequireAuth(), epHandler.Create)
-		endpoints.GET("/:id", authMW.RequireAuth(), epHandler.GetByID)
-		endpoints.PATCH("/:id", authMW.RequireAuth(), epHandler.Update)
-		endpoints.DELETE("/:id", authMW.RequireRole("administrator"), epHandler.Delete)
-		endpoints.POST("/:id/toggle", authMW.RequireAuth(), epHandler.Toggle)
-	}
-}
-
-// RegisterAuthRoutes registers authentication-related routes.
-func RegisterAuthRoutes(r *gin.Engine, authHandler *handler.AuthHandler) {
-	auth := r.Group("/api/v1/auth")
-	{
-		auth.POST("/register", authHandler.Register)
-		auth.POST("/login", authHandler.Login)
-		auth.POST("/refresh", authHandler.Refresh)
-		auth.POST("/logout", authHandler.Logout)
-	}
-}
-
-// RegisterHealthRoute registers the health check route.
-func RegisterHealthRoute(r *gin.Engine) {
+	// Health check (public)
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "ForgeBase"})
 	})
+
+	// Rate limiting (default to 100 requests per minute)
+	rateLimitMW := rateLimiter.Limit()
+
+	// Auth routes (public)
+	authGroup := r.Group("/api/v1/auth")
+	{
+		authGroup.POST("/register", deps.AuthHandler.Register)
+		authGroup.POST("/login", deps.AuthHandler.Login)
+		authGroup.POST("/refresh", deps.AuthHandler.Refresh)
+		authGroup.POST("/logout", deps.AuthHandler.Logout, deps.AuthMW.RequireAuth())
+	}
+
+	// User routes (authenticated)
+	userGroup := r.Group("/api/v1/users", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		userGroup.GET("", deps.UserHandler.List)
+		userGroup.GET("/:id", deps.UserHandler.GetByID)
+		userGroup.PATCH("/:id", deps.UserHandler.Update)
+		userGroup.DELETE("/:id", deps.AuthMW.RequireRole("administrator"), deps.UserHandler.Delete)
+	}
+
+	// Workspace routes (authenticated)
+	wsGroup := r.Group("/api/v1/workspaces", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		wsGroup.GET("", deps.WorkspaceHandler.List)
+		wsGroup.POST("", deps.WorkspaceHandler.Create)
+		wsGroup.GET("/:id", deps.WorkspaceHandler.GetByID)
+		wsGroup.PATCH("/:id", deps.WorkspaceHandler.Update)
+		wsGroup.DELETE("/:id", deps.AuthMW.RequireRole("administrator"), deps.WorkspaceHandler.Delete)
+	}
+
+	// Team routes (authenticated)
+	teamGroup := r.Group("/api/v1/teams", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		teamGroup.GET("/:id", deps.TeamHandler.GetByID)
+		teamGroup.POST("/:id/members", deps.TeamHandler.AddMember)
+		teamGroup.GET("/:id/members", deps.TeamHandler.ListMembers)
+		teamGroup.DELETE("/:id/members/:user_id", deps.TeamHandler.RemoveMember)
+	}
+
+	// Collection routes (authenticated)
+	colGroup := r.Group("/api/v1/collections", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		colGroup.GET("", deps.CollectionHandler.List)
+		colGroup.POST("", deps.CollectionHandler.Create)
+		colGroup.GET("/:id", deps.CollectionHandler.GetByID)
+		colGroup.PATCH("/:id", deps.CollectionHandler.Update)
+		colGroup.DELETE("/:id", deps.AuthMW.RequireRole("administrator"), deps.CollectionHandler.Delete)
+	}
+
+	// Endpoint routes (authenticated)
+	epGroup := r.Group("/api/v1/endpoints", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		epGroup.GET("", deps.EndpointHandler.List)
+		epGroup.POST("", deps.EndpointHandler.Create)
+		epGroup.GET("/:id", deps.EndpointHandler.GetByID)
+		epGroup.PATCH("/:id", deps.EndpointHandler.Update)
+		epGroup.DELETE("/:id", deps.AuthMW.RequireRole("administrator"), deps.EndpointHandler.Delete)
+		epGroup.POST("/:id/toggle", deps.EndpointHandler.Toggle)
+	}
+
+	// Introspection routes (authenticated)
+	introGroup := r.Group("/api/v1/introspect", deps.AuthMW.RequireAuth(), rateLimitMW)
+	{
+		introGroup.GET("/schemas/:schema/tables", deps.IntrospectHandler.DiscoverTables)
+		introGroup.GET("/schemas/:schema/tables/:table", deps.IntrospectHandler.GetTableSchema)
+		introGroup.GET("/schemas/:schema/functions", deps.IntrospectHandler.DiscoverFunctions)
+		introGroup.GET("/schemas/:schema/functions/:name", deps.IntrospectHandler.GetFunctionSignature)
+		introGroup.GET("/schemas/:schema/procedures", deps.IntrospectHandler.DiscoverProcedures)
+	}
 }

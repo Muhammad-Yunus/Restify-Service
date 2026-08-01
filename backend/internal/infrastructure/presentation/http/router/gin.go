@@ -3,7 +3,9 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
@@ -14,7 +16,7 @@ type GinRouter struct {
 	engine *gin.Engine
 }
 
-// NewGinRouter creates a new Gin router.
+// NewGinRouter creates a new Gin router with default middleware (CORS, logging, recovery).
 func NewGinRouter(env string) *GinRouter {
 	if env == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -23,6 +25,14 @@ func NewGinRouter(env string) *GinRouter {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	engine.Use(gin.Logger())
+	engine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-API-Key"},
+		ExposeHeaders:    []string{"Link", "X-Total-Count"},
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	return &GinRouter{engine: engine}
 }
@@ -58,6 +68,11 @@ func (r *GinRouter) Handle(method, path string, handler http.HandlerFunc, middle
 // ServeHTTP implements http.Handler.
 func (r *GinRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.engine.ServeHTTP(w, req)
+}
+
+// Engine returns the underlying Gin engine for advanced usage.
+func (r *GinRouter) Engine() *gin.Engine {
+	return r.engine
 }
 
 // middlewareToGin adapts a domain middleware to a Gin handler. The domain
