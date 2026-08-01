@@ -27,7 +27,6 @@
 - [Testing](#-testing)
 - [Migrations](#-migrations)
 - [Security](#-security)
-- [Contributing](#-contributing)
 - [License](#-license)
 
 ---
@@ -704,27 +703,6 @@ Span flow:  HTTP Request → [Auth] → [Handler] → [Repository] → DB
 - `status: "ok"` — all dependencies healthy
 - `status: "degraded"` — one or more dependencies are unhealthy
 - `checks` object with per-service status (`database`, `cache`)
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/your-feature`)
-3. Commit changes (`git commit -am 'feat: add your feature'`)
-4. Push to the branch (`git push origin feat/your-feature`)
-5. Open a Pull Request
-
-### Commit Convention
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat(auth): add refresh token endpoint
-fix(router): fix rate limiter key collision
-chore: bump go.mod to 1.25
-docs(readme): add architecture diagram
-```
 
 ---
 
