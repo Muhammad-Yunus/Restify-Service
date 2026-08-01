@@ -705,17 +705,6 @@ Span flow:  HTTP Request → [Auth] → [Handler] → [Repository] → DB
 - `status: "degraded"` — one or more dependencies are unhealthy
 - `checks` object with per-service status (`database`, `cache`)
 
-### Prometheus Metrics (future)
-
-```mermaid
-flowchart LR
-    App[ForgeBase] --> Metrics[/metrics]
-    Metrics --> Grafana[Grafana Dashboard]
-    Metrics --> Prometheus[Prometheus]
-    style Prometheu fill:#e8f5e9
-    style Grafana fill:#fff3e0
-```
-
 ---
 
 ## 🤝 Contributing
