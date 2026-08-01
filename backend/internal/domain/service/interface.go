@@ -140,6 +140,12 @@ type RESTGenerator interface {
 
 	// ValidateBinding checks if the endpoint's DB binding is valid.
 	ValidateBinding(ctx context.Context, endpoint *entity.Endpoint) error
+
+	// MapHeader extracts auth and header-mapped params from a request.
+	MapHeader(ctx context.Context, endpoint *entity.Endpoint, r *http.Request) (string, map[string]string, error)
+
+	// MapBody reads and maps the request body to DB parameters.
+	MapBody(ctx context.Context, endpoint *entity.Endpoint, r *http.Request) (map[string]any, error)
 }
 
 // AnalyticsService manages API analytics data.

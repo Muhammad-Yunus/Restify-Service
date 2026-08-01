@@ -233,6 +233,14 @@ func (s *restGeneratorStub) ValidateBinding(ctx context.Context, endpoint *entit
 	return errStubNotImplemented
 }
 
+func (s *restGeneratorStub) MapHeader(ctx context.Context, endpoint *entity.Endpoint, r *http.Request) (string, map[string]string, error) {
+	return "", nil, errStubNotImplemented
+}
+
+func (s *restGeneratorStub) MapBody(ctx context.Context, endpoint *entity.Endpoint, r *http.Request) (map[string]any, error) {
+	return nil, errStubNotImplemented
+}
+
 type analyticsServiceStub struct{}
 
 // NewAnalyticsService constructs the analytics service.

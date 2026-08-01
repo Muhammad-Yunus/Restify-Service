@@ -12,21 +12,28 @@ import (
 )
 
 // RESTGenerator generates HTTP handlers from endpoint DB bindings.
-type RESTGenerator struct {
+type RESTGenerator interface {
+	GenerateHandler(ctx context.Context, endpoint *entity.Endpoint) (http.HandlerFunc, error)
+	ValidateBinding(ctx context.Context, endpoint *entity.Endpoint) error
+	MapHeader(ctx context.Context, ep *entity.Endpoint, r *http.Request) (string, map[string]string, error)
+	MapBody(ctx context.Context, ep *entity.Endpoint, r *http.Request) (map[string]any, error)
+}
+
+type restGeneratorImpl struct {
 	introspector service.APIIntrospector
 	logger       repository.Logger
 }
 
 // NewRESTGenerator creates a new REST API generator.
-func NewRESTGenerator(introspector service.APIIntrospector, logger repository.Logger) service.RESTGenerator {
-	return &RESTGenerator{
+func NewRESTGenerator(introspector service.APIIntrospector, logger repository.Logger) RESTGenerator {
+	return &restGeneratorImpl{
 		introspector: introspector,
 		logger:       logger,
 	}
 }
 
 // GenerateHandler creates an HTTP handler for an endpoint.
-func (g *RESTGenerator) GenerateHandler(ctx context.Context, ep *entity.Endpoint) (http.HandlerFunc, error) {
+func (g *restGeneratorImpl) GenerateHandler(ctx context.Context, ep *entity.Endpoint) (http.HandlerFunc, error) {
 	switch ep.DBType {
 	case entity.EndpointTypeTable:
 		return g.generateTableHandler(ctx, ep), nil
@@ -40,7 +47,7 @@ func (g *RESTGenerator) GenerateHandler(ctx context.Context, ep *entity.Endpoint
 }
 
 // generateTableHandler creates a handler for table-based endpoints.
-func (g *RESTGenerator) generateTableHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
+func (g *restGeneratorImpl) generateTableHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -58,7 +65,7 @@ func (g *RESTGenerator) generateTableHandler(ctx context.Context, ep *entity.End
 }
 
 // handleSelectTable handles GET requests for table data.
-func (g *RESTGenerator) handleSelectTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
+func (g *restGeneratorImpl) handleSelectTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
 	// TODO: Implement table select with query parameters
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -71,7 +78,7 @@ func (g *RESTGenerator) handleSelectTable(w http.ResponseWriter, r *http.Request
 }
 
 // handleInsertTable handles POST requests for table insertion.
-func (g *RESTGenerator) handleInsertTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
+func (g *restGeneratorImpl) handleInsertTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
 	// TODO: Implement table insert with JSON body parsing
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -83,7 +90,7 @@ func (g *RESTGenerator) handleInsertTable(w http.ResponseWriter, r *http.Request
 }
 
 // handleUpdateTable handles PUT/PATCH requests for table updates.
-func (g *RESTGenerator) handleUpdateTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
+func (g *restGeneratorImpl) handleUpdateTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
 	// TODO: Implement table update
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -95,7 +102,7 @@ func (g *RESTGenerator) handleUpdateTable(w http.ResponseWriter, r *http.Request
 }
 
 // handleDeleteTable handles DELETE requests for table records.
-func (g *RESTGenerator) handleDeleteTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
+func (g *restGeneratorImpl) handleDeleteTable(w http.ResponseWriter, r *http.Request, ep *entity.Endpoint) {
 	// TODO: Implement table delete
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -107,7 +114,7 @@ func (g *RESTGenerator) handleDeleteTable(w http.ResponseWriter, r *http.Request
 }
 
 // generateFunctionHandler creates a handler for function-based endpoints.
-func (g *RESTGenerator) generateFunctionHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
+func (g *restGeneratorImpl) generateFunctionHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Implement function call handler
 		w.Header().Set("Content-Type", "application/json")
@@ -122,7 +129,7 @@ func (g *RESTGenerator) generateFunctionHandler(ctx context.Context, ep *entity.
 }
 
 // generateProcedureHandler creates a handler for procedure-based endpoints.
-func (g *RESTGenerator) generateProcedureHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
+func (g *restGeneratorImpl) generateProcedureHandler(ctx context.Context, ep *entity.Endpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Implement procedure call handler
 		w.Header().Set("Content-Type", "application/json")
@@ -137,7 +144,7 @@ func (g *RESTGenerator) generateProcedureHandler(ctx context.Context, ep *entity
 }
 
 // ValidateBinding checks if the endpoint's DB binding is valid.
-func (g *RESTGenerator) ValidateBinding(ctx context.Context, ep *entity.Endpoint) error {
+func (g *restGeneratorImpl) ValidateBinding(ctx context.Context, ep *entity.Endpoint) error {
 	switch ep.DBType {
 	case entity.EndpointTypeTable:
 		return g.validateTableBinding(ctx, ep)
@@ -149,7 +156,7 @@ func (g *RESTGenerator) ValidateBinding(ctx context.Context, ep *entity.Endpoint
 }
 
 // validateTableBinding checks if the table binding is valid.
-func (g *RESTGenerator) validateTableBinding(ctx context.Context, ep *entity.Endpoint) error {
+func (g *restGeneratorImpl) validateTableBinding(ctx context.Context, ep *entity.Endpoint) error {
 	if ep.TableName == "" {
 		return fmt.Errorf("table_name is required for table endpoints")
 	}
@@ -177,7 +184,7 @@ func (g *RESTGenerator) validateTableBinding(ctx context.Context, ep *entity.End
 }
 
 // validateFunctionBinding checks if the function/procedure binding is valid.
-func (g *RESTGenerator) validateFunctionBinding(ctx context.Context, ep *entity.Endpoint) error {
+func (g *restGeneratorImpl) validateFunctionBinding(ctx context.Context, ep *entity.Endpoint) error {
 	if ep.FuncName == "" {
 		return fmt.Errorf("func_name is required for function/procedure endpoints")
 	}
@@ -201,8 +208,28 @@ func (g *RESTGenerator) validateFunctionBinding(ctx context.Context, ep *entity.
 	return nil
 }
 
+// MapHeader extracts and maps HTTP headers to endpoint parameters.
+func (g *restGeneratorImpl) MapHeader(ctx context.Context, ep *entity.Endpoint, r *http.Request) (string, map[string]string, error) {
+	headerMapper, err := NewHeaderMapper(ep.AuthHeader, ep.ParamHeaders)
+	if err != nil {
+		return "", nil, fmt.Errorf("create header mapper: %w", err)
+	}
+	auth := headerMapper.ExtractAuth(r)
+	params := headerMapper.ExtractParams(r)
+	return auth, params, nil
+}
+
+// MapBody reads and maps the request body to database parameters.
+func (g *restGeneratorImpl) MapBody(ctx context.Context, ep *entity.Endpoint, r *http.Request) (map[string]any, error) {
+	bodyMapper, err := NewBodyMapper(ep.BodyMappingJSON)
+	if err != nil {
+		return nil, fmt.Errorf("create body mapper: %w", err)
+	}
+	return bodyMapper.MapBody(r)
+}
+
 // GeneratePath creates a RESTful path from an endpoint.
-func (g *RESTGenerator) GeneratePath(ep *entity.Endpoint) string {
+func (g *restGeneratorImpl) GeneratePath(ep *entity.Endpoint) string {
 	// Use the endpoint's configured path if available
 	if ep.Path != "" {
 		return ep.Path
@@ -220,4 +247,4 @@ func (g *RESTGenerator) GeneratePath(ep *entity.Endpoint) string {
 }
 
 // Compile-time checks
-var _ service.RESTGenerator = (*RESTGenerator)(nil)
+var _ RESTGenerator = (*restGeneratorImpl)(nil)
