@@ -25,7 +25,7 @@ func initRouter(env string, rateLimit *middleware.RateLimitMiddleware, deps *Con
 		AuthMW:            deps.AuthMiddleware,
 	}
 
-	router.RegisterAll(ginRouter.Engine(), handlerDeps, rateLimit, deps.LogRepo, deps.Logger)
+	router.RegisterAll(ginRouter.Engine(), handlerDeps, rateLimit, deps.LogRepo, deps.Logger, deps.DB, deps.Cache)
 
 	// Register WebSocket endpoint (public)
 	ginRouter.Engine().GET("/ws", deps.WSHandler.Handle)

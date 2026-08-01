@@ -5,8 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/muhammadyunus/Restify-Service/internal/domain/repository"
 	httpHandler "github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/handler"
 	"github.com/muhammadyunus/Restify-Service/internal/infrastructure/presentation/http/middleware"
+	"github.com/muhammadyunus/Restify-Service/internal/version"
 )
 
 //	@title			ForgeBase API
@@ -55,20 +57,54 @@ type HandlerDeps struct {
 
 // routerDeps holds dependencies needed for route registration.
 type routerDeps struct {
-	logRepo interface {
-		Create(context interface{}, entry interface{}) error
-	}
-	logger interface {
-		Error(ctx interface{}, msg string, v ...interface{})
-	}
+	logRepo repository.APILogRepository
+	logger  repository.Logger
+	db      repository.DB
+	cache   repository.Cache
 }
 
 // RegisterAll registers all API routes with versioning.
-func RegisterAll(r *gin.Engine, deps *HandlerDeps, rateLimiter *middleware.RateLimitMiddleware, logRepo interface{}, logger interface{}) {
+func RegisterAll(r *gin.Engine, deps *HandlerDeps, rateLimiter *middleware.RateLimitMiddleware, logRepo repository.APILogRepository, logger repository.Logger, db repository.DB, cache repository.Cache) {
+	rd := &routerDeps{
+		logRepo: logRepo,
+		logger:  logger,
+		db:      db,
+		cache:   cache,
+	}
 
 	// Health check (public)
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "ForgeBase"})
+		status := "ok"
+		checks := gin.H{}
+
+		if rd.db != nil {
+			// Try a lightweight query to verify database connectivity
+			var healthy bool
+			if err := rd.db.Raw(c.Request.Context(), "SELECT true", &healthy); err != nil {
+				status = "degraded"
+				checks["database"] = "error"
+			} else {
+				checks["database"] = "ok"
+			}
+		}
+
+		if rd.cache != nil {
+			if _, err := rd.cache.Get(c.Request.Context(), "health:ping"); err != nil {
+				status = "degraded"
+				checks["cache"] = "error"
+			} else {
+				checks["cache"] = "ok"
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"status":     status,
+			"service":    "ForgeBase",
+			"version":    version.Version,
+			"built_at":   version.BuiltAt,
+			"git_commit": version.GitCommit,
+			"checks":     checks,
+		})
 	})
 
 	// Rate limiting (default to 100 requests per minute)

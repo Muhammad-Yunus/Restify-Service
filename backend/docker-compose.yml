@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  ForgeBase:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ForgeBase_HOST=0.0.0.0
+      - ForgeBase_PORT=8080
+      - DATABASE_URL=postgres://ForgeBase:ForgeBase@db:5432/ForgeBase?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@mq:5672/
+      - EMQX_BROKER_URL=tcp://emqx:1883
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - LOG_LEVEL=debug
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mq:
+        condition: service_started
+      emqx:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=ForgeBase
+      - POSTGRES_PASSWORD=ForgeBase
+      - POSTGRES_DB=ForgeBase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ForgeBase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+  emqx:
+    image: emqx/emqx:5.0
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "8084:8084"
+      - "18083:18083"
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
+  redis_data:

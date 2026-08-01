@@ -2,9 +2,11 @@
 
 APP_NAME=ForgeBase
 CMD=cmd/ForgeBase
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+BUILT_AT ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 build:
-	go build -o bin/$(APP_NAME) ./$(CMD)
+	go build -ldflags="-s -w -X github.com/muhammadyunus/Restify-Service/internal/version.Version=$(VERSION) -X github.com/muhammadyunus/Restify-Service/internal/version.BuiltAt=$(BUILT_AT) -X github.com/muhammadyunus/Restify-Service/internal/version.GitCommit=$(shell git rev-parse HEAD 2>/dev/null || echo "unknown")" -o bin/$(APP_NAME) ./$(CMD)
 
 run: build
 	./bin/$(APP_NAME)
