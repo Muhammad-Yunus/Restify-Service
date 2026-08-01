@@ -64,8 +64,27 @@ type Container struct {
 	SchedulerService domservice.SchedulerService
 
 	IntrospectService *service.IntrospectorService
+	QueueService      *service.QueueService
+	WorkerPool        *service.WorkerPool
 
 	closer []func(context.Context) error
+}
+
+// RegisterWorker registers a worker to be started by the pool.
+func (c *Container) RegisterWorker(worker *service.Worker) {
+	c.WorkerPool.Add(worker)
+}
+
+// RegisterQueueWorker is a convenience method to register a worker with a queue handler.
+func (c *Container) RegisterQueueWorker(name string, queue string, handler repository.MessageHandler) {
+	worker := service.NewWorker(
+		name,
+		queue,
+		handler,
+		c.Logger,
+		c.QueueService.Consume,
+	)
+	c.WorkerPool.Add(worker)
 }
 
 // Bootstrap wires all application dependencies into a ready-to-run Container.
@@ -144,6 +163,10 @@ func (c *Container) wireServices() error {
 	c.AlertService = domservice.NewAlertService(c.AlertRepo, c.Queue, c.EmailService, c.Logger, c.MQTT)
 	c.SchedulerService = domservice.NewSchedulerService(c.Logger)
 	c.IntrospectService = service.NewIntrospectorService(c.APIIntrospector)
+
+	// Initialize message queue service and worker pool
+	c.QueueService = service.NewQueueService(c.Queue)
+	c.WorkerPool = service.NewWorkerPool(c.Logger)
 
 	// Initialize auth middleware and rate limiter
 	jwtExpiration, _ := time.ParseDuration(c.Config.JWT.Expiration)
