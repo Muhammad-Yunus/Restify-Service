@@ -1,0 +1,39 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Vendor directory
+vendor/
+
+# Config files (local overrides)
+configs/.local.*
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage.out
+coverage.html
+
+# Logs
+*.log
+logs/
+
+# Docs
+docs/swagger/*
+!docs/swagger/.gitkeep

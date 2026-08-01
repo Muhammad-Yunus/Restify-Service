@@ -1,0 +1,87 @@
+# Dependencies
+vendor/
+
+# Build output
+/bin/
+/pkg/
+/cmd/server/*.exe
+/backend/bin/
+/backend/pkg/
+/backend/*.exe
+
+# IDE
+.idea/
+backend/.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+*.exe
+*.obj
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Test coverage
+coverage.out
+*.coverprofile
+
+# Environment
+backend/.env
+backend/.env.local
+
+# Swagger docs (generated)
+backend/docs/swagger/swagger.json
+backend/docs/swagger/swagger.yaml
+
+# Wire generated
+backend/cmd/server/wire_gen.go
+
+# Migrations (generated)
+backend/migrations/.tmp/
+
+# Docker
+docker-compose.override.yml
+*.pid
+*.sem
+
+# Logs
+*.log
+logs/
+*.log.[0-9]
+*.log.gz
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Test containers
+backend/tests/fixtures/docker-compose.override.yml
+
+# Claude
+.claude/
+.claude/settings.*
+.claude/**/*.md
+
+# Agent
+.agents/
+agent
+
+# Skills lock
+skills-lock.json
+
+# Epic/plan docs (optional — uncomment if you want to track these)
+# epic/
+# plan.md
